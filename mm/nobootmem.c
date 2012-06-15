@@ -65,7 +65,7 @@ static void * __init __alloc_memory_core_early(int nid, u64 size, u64 align,
  * down, but we are still initializing the system.  Pages are given directly
  * to the page allocator, no bootmem metadata is updated because it is gone.
  */
-void __init free_bootmem_late(unsigned long addr, unsigned long size)
+void __init free_bootmem_late(phys_addr_t addr, unsigned long size)
 {
 	unsigned long cursor, end;
 
@@ -198,7 +198,7 @@ unsigned long __init free_all_bootmem(void)
  *
  * The range must reside completely on the specified node.
  */
-void __init free_bootmem_node(pg_data_t *pgdat, unsigned long physaddr,
+void __init free_bootmem_node(pg_data_t *pgdat, phys_addr_t physaddr,
 			      unsigned long size)
 {
 	kmemleak_free_part(__va(physaddr), size);
@@ -214,7 +214,7 @@ void __init free_bootmem_node(pg_data_t *pgdat, unsigned long physaddr,
  *
  * The range must be contiguous but may span node boundaries.
  */
-void __init free_bootmem(unsigned long addr, unsigned long size)
+void __init free_bootmem(phys_addr_t addr, unsigned long size)
 {
 	kmemleak_free_part(__va(addr), size);
 	memblock_free(addr, size);
@@ -259,7 +259,7 @@ restart:
  * Returns NULL on failure.
  */
 void * __init __alloc_bootmem_nopanic(unsigned long size, unsigned long align,
-					unsigned long goal)
+				      phys_addr_t goal)
 {
 	unsigned long limit = -1UL;
 
@@ -267,7 +267,7 @@ void * __init __alloc_bootmem_nopanic(unsigned long size, unsigned long align,
 }
 
 static void * __init ___alloc_bootmem(unsigned long size, unsigned long align,
-					unsigned long goal, unsigned long limit)
+				      phys_addr_t goal, phys_addr_t limit)
 {
 	void *mem = ___alloc_bootmem_nopanic(size, align, goal, limit);
 
@@ -295,7 +295,7 @@ static void * __init ___alloc_bootmem(unsigned long size, unsigned long align,
  * The function panics if the request can not be satisfied.
  */
 void * __init __alloc_bootmem(unsigned long size, unsigned long align,
-			      unsigned long goal)
+			      phys_addr_t goal)
 {
 	unsigned long limit = -1UL;
 
@@ -303,10 +303,10 @@ void * __init __alloc_bootmem(unsigned long size, unsigned long align,
 }
 
 void * __init ___alloc_bootmem_node_nopanic(pg_data_t *pgdat,
-						   unsigned long size,
-						   unsigned long align,
-						   unsigned long goal,
-						   unsigned long limit)
+					    unsigned long size,
+					    unsigned long align,
+					    phys_addr_t goal,
+					    phys_addr_t limit)
 {
 	void *ptr;
 
@@ -330,7 +330,7 @@ again:
 }
 
 void * __init __alloc_bootmem_node_nopanic(pg_data_t *pgdat, unsigned long size,
-				   unsigned long align, unsigned long goal)
+					   unsigned long align, phys_addr_t goal)
 {
 	if (WARN_ON_ONCE(slab_is_available()))
 		return kzalloc_node(size, GFP_NOWAIT, pgdat->node_id);
@@ -369,7 +369,7 @@ void * __init ___alloc_bootmem_node(pg_data_t *pgdat, unsigned long size,
  * The function panics if the request can not be satisfied.
  */
 void * __init __alloc_bootmem_node(pg_data_t *pgdat, unsigned long size,
-				   unsigned long align, unsigned long goal)
+				   unsigned long align, phys_addr_t goal)
 {
 	if (WARN_ON_ONCE(slab_is_available()))
 		return kzalloc_node(size, GFP_NOWAIT, pgdat->node_id);
@@ -378,7 +378,7 @@ void * __init __alloc_bootmem_node(pg_data_t *pgdat, unsigned long size,
 }
 
 void * __init __alloc_bootmem_node_high(pg_data_t *pgdat, unsigned long size,
-				   unsigned long align, unsigned long goal)
+				   unsigned long align, phys_addr_t goal)
 {
 	return __alloc_bootmem_node(pgdat, size, align, goal);
 }
@@ -401,7 +401,7 @@ void * __init __alloc_bootmem_node_high(pg_data_t *pgdat, unsigned long size,
  * The function panics if the request can not be satisfied.
  */
 void * __init __alloc_bootmem_low(unsigned long size, unsigned long align,
-				  unsigned long goal)
+				  phys_addr_t goal)
 {
 	return ___alloc_bootmem(size, align, goal, ARCH_LOW_ADDRESS_LIMIT);
 }
@@ -422,7 +422,7 @@ void * __init __alloc_bootmem_low(unsigned long size, unsigned long align,
  * The function panics if the request can not be satisfied.
  */
 void * __init __alloc_bootmem_low_node(pg_data_t *pgdat, unsigned long size,
-				       unsigned long align, unsigned long goal)
+				       unsigned long align, phys_addr_t goal)
 {
 	if (WARN_ON_ONCE(slab_is_available()))
 		return kzalloc_node(size, GFP_NOWAIT, pgdat->node_id);
