@@ -67,8 +67,8 @@ static void identity_mapping_add(pgd_t *pgd, const char *text_start,
 	unsigned long addr, end;
 	unsigned long next;
 
-	addr = virt_to_phys(text_start);
-	end = virt_to_phys(text_end);
+	addr = (unsigned long)virt_to_idmap(text_start);
+	end = (unsigned long)virt_to_idmap(text_end);
 
 	prot |= PMD_TYPE_SECT | PMD_SECT_AP_WRITE | PMD_SECT_AF;
 
