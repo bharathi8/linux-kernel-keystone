@@ -54,7 +54,12 @@ struct davinci_soc_info {
 	u32				jtag_id_reg;
 	struct davinci_id		*ids;
 	unsigned long			ids_num;
+#ifdef CONFIG_COMMON_CLK
+	struct davinci_clk_lookup	*cpu_clks;
+	struct davinci_dev_lookup	*dev_clk_lookups;
+#else
 	struct clk_lookup		*cpu_clks;
+#endif
 	u32				*psc_bases;
 	unsigned long			psc_bases_num;
 	u32				pinmux_base;
