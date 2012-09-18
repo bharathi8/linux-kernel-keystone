@@ -20,7 +20,9 @@
 #include <mach/common.h>
 #include <mach/cputype.h>
 
+#ifndef CONFIG_COMMON_CLK
 #include "clock.h"
+#endif
 
 struct davinci_soc_info davinci_soc_info;
 EXPORT_SYMBOL(davinci_soc_info);
@@ -104,7 +106,9 @@ void __init davinci_common_init(struct davinci_soc_info *soc_info)
 		goto err;
 
 	if (davinci_soc_info.cpu_clks) {
+#ifndef CONFIG_COMMON_CLK
 		ret = davinci_clk_init(davinci_soc_info.cpu_clks);
+#endif
 
 		if (ret != 0)
 			goto err;
@@ -120,5 +124,7 @@ void __init davinci_init_late(void)
 {
 	davinci_cpufreq_init();
 	davinci_pm_init();
+#ifndef CONFIG_COMMON_CLK
 	davinci_clk_disable_unused();
+#endif
 }
