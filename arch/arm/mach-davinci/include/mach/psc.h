@@ -252,9 +252,11 @@
 
 #ifndef __ASSEMBLER__
 
+#ifndef CONFIG_COMMON_CLK
 extern int davinci_psc_is_clk_active(unsigned int ctlr, unsigned int id);
 extern void davinci_psc_config(unsigned int domain, unsigned int ctlr,
 		unsigned int id, bool enable, u32 flags);
+#endif
 
 #endif
 

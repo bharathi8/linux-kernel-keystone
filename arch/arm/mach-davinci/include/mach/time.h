@@ -31,5 +31,7 @@ enum {
 #define ID_TO_TIMER(id)		(IS_TIMER1(id) != 0)
 
 extern struct davinci_timer_instance davinci_timer_instance[];
-
+#ifdef CONFIG_COMMON_CLK
+extern void davinci_watchdog_reset(struct platform_device *);
+#endif
 #endif /* __ARCH_ARM_MACH_DAVINCI_TIME_H */
