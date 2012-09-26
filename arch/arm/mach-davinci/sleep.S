@@ -24,11 +24,7 @@
 #include <mach/psc.h>
 #include <mach/ddr2.h>
 
-#ifndef CONFIG_COMMON_CLK
-#include "clock.h"
-#else
 #include <mach/pll.h>
-#endif
 
 /* Arbitrary, hardware currently does not update PHYRDY correctly */
 #define PHYRDY_CYCLES		0x1000

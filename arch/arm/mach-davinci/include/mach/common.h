@@ -54,12 +54,8 @@ struct davinci_soc_info {
 	u32				jtag_id_reg;
 	struct davinci_id		*ids;
 	unsigned long			ids_num;
-#ifdef CONFIG_COMMON_CLK
 	struct davinci_clk_lookup	*cpu_clks;
 	struct davinci_dev_lookup	*dev_clk_lookups;
-#else
-	struct clk_lookup		*cpu_clks;
-#endif
 	u32				*psc_bases;
 	unsigned long			psc_bases_num;
 	u32				pinmux_base;
@@ -90,12 +86,6 @@ extern void davinci_common_init(struct davinci_soc_info *soc_info);
 extern void davinci_init_ide(void);
 void davinci_restart(char mode, const char *cmd);
 void davinci_init_late(void);
-
-#ifdef CONFIG_DAVINCI_RESET_CLOCKS
-int davinci_clk_disable_unused(void);
-#else
-static inline int davinci_clk_disable_unused(void) { return 0; }
-#endif
 
 #ifdef CONFIG_CPU_FREQ
 int davinci_cpufreq_init(void);

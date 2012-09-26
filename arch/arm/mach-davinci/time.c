@@ -18,9 +18,7 @@
 #include <linux/clk.h>
 #include <linux/err.h>
 #include <linux/platform_device.h>
-#ifdef CONFIG_COMMON_CLK
 #include <linux/platform_data/davinci-clock.h>
-#endif
 
 #include <asm/sched_clock.h>
 #include <asm/mach/irq.h>
@@ -29,10 +27,6 @@
 #include <mach/cputype.h>
 #include <mach/hardware.h>
 #include <mach/time.h>
-
-#ifndef CONFIG_COMMON_CLK
-#include "clock.h"
-#endif
 
 static struct clock_event_device clockevent_davinci;
 static unsigned int davinci_clock_tick_rate;
