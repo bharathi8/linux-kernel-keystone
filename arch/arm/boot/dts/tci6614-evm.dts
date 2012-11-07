@@ -6,6 +6,7 @@
 	compatible = "ti,tci6614-evm";
 	#address-cells = <1>;
 	#size-cells = <1>;
+	interrupt-parent = <&virtintc>;
 
 	chosen {
 		bootargs = "console=ttyS0,115200n8 mem=512M rootwait=1 rw ubi.mtd=2,2048 rootfstype=ubifs root=ubi0:rootfs";
@@ -14,6 +15,17 @@
 	memory {
 		device_type = "memory";
 		reg = <0x80000000 0x8000000>;
+	};
+
+	virtintc: interrupt-controller@48200000 {
+		compatible = "ti,tci6614-intctrl";
+		interrupt-controller;
+		#interrupt-cells = <1>;
+		#size-cells = <1>;
+		#address-cells = <1>;
+		reg = <0x48200000 0x2000
+			0x02610000 0x2000
+			0x0260c000 0x1000>;
 	};
 
 	soc6614@2000000 {
@@ -1172,7 +1184,7 @@
 			compatible = "ti,keystone-ipc-irq";
 			reg  = <0x026202bc 4	/* host ack register */
 			        0x0262027c 4>;	/* ipc host interrupt generation register */
-			irq  = <129>;		/* it should match the value in irqs.h */
+			interrupts = <129>;	/* it should match the value in irqs.h */
 			base = <512>;		/* base irq number
 						   following is the source id to irq mapping
 						   SRCS0 <-> base ... SRCS27 <-> (base + 27)
@@ -1259,6 +1271,26 @@
                         dev-id-size = <0>;  /* RapidIO common transport system size.
 			                     * 0 - Small size. 8-bit deviceID fields. 256 devices.
                                              * 1 - Large size, 16-bit deviceID fields. 65536 devices. */
+		};
+
+		uart0:	serial@2540000 {
+			compatible	= "ns16550a";
+			current-speed	= <115200>;
+			reg-shift	= <2>;
+			reg-io-width	= <4>;
+			interrupts	= <448>;
+			reg		= <0x02540000 0x100>;
+			clocks		= <&clkuart0>;
+		};
+
+		uart1:	serial@2541000 {
+			compatible	= "ns16550a";
+			current-speed	= <115200>;
+			reg-shift	= <2>;
+			reg-io-width	= <4>;
+			interrupts	= <451>;
+			reg		= <0x02541000 0x100>;
+			clocks		= <&clkuart1>;
 		};
 	};
 };
