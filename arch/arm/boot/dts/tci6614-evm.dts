@@ -22,6 +22,11 @@
 		compatible = "simple-bus", "ti,tci6614-bus";
 		ranges;
 
+		rstctrl:rstctrl@23100e8 {
+			compatible = "ti,pllctrl-reset";
+			reg = <0x023100e8 4>;
+		};
+
 		clocks {
 			#address-cells = <1>;
 			#size-cells = <1>;
