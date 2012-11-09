@@ -10,7 +10,7 @@ obj-y 			:= time.o clock.o serial.o psc.o \
 else
 ifdef CONFIG_ARCH_DAVINCI_TCI6614
 obj-y 			:= time.o \
-			   dma.o usb.o common.o sram.o aemif.o
+			   dma.o usb.o common.o sram.o
 else
 obj-y 			:= time.o serial.o \
 			   dma.o usb.o common.o sram.o aemif.o
