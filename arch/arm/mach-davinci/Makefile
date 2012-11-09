@@ -8,8 +8,13 @@ ifndef CONFIG_COMMON_CLK
 obj-y 			:= time.o clock.o serial.o psc.o \
 			   dma.o usb.o common.o sram.o aemif.o
 else
+ifdef CONFIG_ARCH_DAVINCI_TCI6614
+obj-y 			:= time.o \
+			   dma.o usb.o common.o sram.o aemif.o
+else
 obj-y 			:= time.o serial.o \
 			   dma.o usb.o common.o sram.o aemif.o
+endif
 endif
 
 obj-$(CONFIG_DAVINCI_MUX)		+= mux.o
