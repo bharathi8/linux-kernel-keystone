@@ -26,6 +26,7 @@
 #include <linux/slab.h>
 #include <linux/sched.h>
 #include <linux/mod_devicetable.h>
+#include <linux/of_device.h>
 
 #include <linux/mtd/cfi.h>
 #include <linux/mtd/mtd.h>
@@ -756,6 +757,16 @@ static const struct spi_device_id m25p_ids[] = {
 };
 MODULE_DEVICE_TABLE(spi, m25p_ids);
 
+#ifdef CONFIG_OF
+static const struct of_device_id m25p_dt_ids[] = {
+	{ .compatible = "st,m25p", },
+	{ /* sentinel */ }
+};
+MODULE_DEVICE_TABLE(of, m25p_dt_ids);
+#else
+#define m25p_dt_ids NULL
+#endif
+
 static const struct spi_device_id *jedec_probe(struct spi_device *spi)
 {
 	int			tmp;
@@ -992,6 +1003,7 @@ static struct spi_driver m25p80_driver = {
 	.driver = {
 		.name	= "m25p80",
 		.owner	= THIS_MODULE,
+		.of_match_table = m25p_dt_ids,
 	},
 	.id_table	= m25p_ids,
 	.probe	= m25p_probe,
