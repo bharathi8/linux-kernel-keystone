@@ -1,0 +1,14 @@
+* STMicroelectronics SPI Flash
+
+Required properties:
+- compatible : "st,<model>", "st,m25p".
+
+Examples:
+
+flash: m25p32@1 {
+	#address-cells = <1>;
+	#size-cells = <1>;
+	compatible = "st,m25p32", "st,m25p";
+	spi-max-frequency = <20000000>;
+	reg = <1>;
+};
