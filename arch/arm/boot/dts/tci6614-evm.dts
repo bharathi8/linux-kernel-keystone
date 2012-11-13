@@ -1597,6 +1597,8 @@
 				4 0 0x78000000 0x04000000
 				5 0 0x7C000000 0x04000000
 				6 0 0x20c00000 0x100>;
+			clocks = <&clkaemif>;
+			clock-names = "aemif";
 
 			nand_cs:cs2@70000000 {
 				compatible = "ti,davinci-cs";
@@ -1625,6 +1627,8 @@
 				ti,davinci-ecc-mode = "hw";
 				ti,davinci-ecc-bits = <4>;
 				ti,davinci-nand-use-bbt;
+				clocks = <&clkaemif>;
+				clock-names = "aemif";
 
 				partition@0 {
 					label = "u-boot";
@@ -1663,6 +1667,37 @@
 			interrupts	= <451>;
 			reg		= <0x02541000 0x100>;
 			clocks		= <&clkuart1>;
+		};
+
+		spi:spi0@20BF0000 {
+			#address-cells			= <1>;
+			#size-cells			= <0>;
+			compatible			= "ti,davinci-spi";
+			reg				= <0x20BF0000 0x1000>;
+			ti,davinci-spi-version		= "1.0";
+			ti,davinci-spi-num-cs		= <4>;
+			ti,davinci-spi-intr-line	= <0>;
+			interrupts			= <338>;
+			clocks				= <&clkspi>;
+
+			flash: n25q032@0 {
+				#address-cells = <1>;
+				#size-cells = <1>;
+				compatible = "st,m25p32";
+				spi-max-frequency = <25000000>;
+				reg = <0>;
+
+				partition@0 {
+					label = "u-boot-spl";
+					reg = <0x0 0x80000>;
+					read-only;
+				};
+
+				partition@1 {
+					label = "test";
+					reg = <0x80000 0x380000>;
+				};
+			};
 		};
 	};
 };
