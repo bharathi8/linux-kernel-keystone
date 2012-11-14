@@ -27,6 +27,223 @@
 			0x02610000 0x2000
 			0x0260c000 0x1000>;
 	};
+	
+	droppolicies: default-drop-policies {
+		no-drop {
+			default;
+			packet-units;
+			limit = <0>;
+		};
+		tail-drop-64pkts {
+			packet-units;
+			limit = <64>;
+		};
+		tail-drop-100pkts {
+			packet-units;
+			limit = <100>;
+		};
+		tail-drop-32kb {
+			byte-units;
+			limit = <32768>;
+		};
+		tail-drop-64kb {
+			byte-units;
+			limit = <65536>;
+		};
+		red-32kb-128kb {
+			byte-units;
+			limit = <196608>;
+			random-early-drop = <32768 131072 2 2000>;
+		};
+		red-32kb-64kb {
+			byte-units;
+			limit = <131072>;
+			random-early-drop = <32768 65536 2 2000>;
+		};
+		all-drop {
+			byte-units;
+			limit = <0>;
+		};
+	};
+
+	qostree: qos-tree {
+		strict-priority;		/* or weighted-round-robin */
+		byte-units;			/* packet-units or byte-units */
+		output-rate = <31250000 25000>;
+		overhead-bytes = <24>;		/* valid only if units are bytes */
+		output-queue = <645>;		/* allowed only on root node */
+
+		high-priority {
+			byte-units;		/* packet-units or byte-units */
+			priority = <0>;
+			signaling {
+				input-queues = <8046 8071>;
+				stats-class  = "fastpath-hp";
+				drop-policy = "no-drop";
+			};
+			linux-signaling {
+				input-queues = <8077>;
+				stats-class  = "linux-hp";
+				drop-policy = "no-drop";
+			};
+		};
+
+		wrr-aggregator {
+			weighted-round-robin;
+			priority = <1>;
+			byte-units;			/* packet-units or byte-units */
+			overhead-bytes = <24>;		/* valid only if units are bytes */
+			wrr-cos0 {
+				weighted-round-robin;		/* or weighted-round-robin */
+				byte-units;			/* packet-units or byte-units */
+				weight = <20>;
+				overhead-bytes = <24>;		/* valid only if units are bytes */
+				4g-cos0 {
+					drop-policy = "tail-drop-32kb";
+					weight = <5>;
+					input-queues = <8010 8065>;
+					stats-class  = "cos0";
+				};
+				3g-cos0 {
+					drop-policy = "tail-drop-32kb";
+					weight = <5>;
+					input-queues = <8012>;
+					stats-class  = "cos0";
+				};
+				wifi-cos0 {
+					drop-policy = "tail-drop-32kb";
+					weight = <5>;
+					input-queues = <8014>;
+					stats-class  = "cos0";
+				};
+				linux-cos0 {
+					drop-policy = "tail-drop-32kb";
+					weight = <5>;
+					input-queues = <8073>;
+					stats-class  = "linux-cos0";
+				};
+			};
+			wrr-cos1 {
+				weighted-round-robin;		/* or weighted-round-robin */
+				byte-units;			/* packet-units or byte-units */
+				weight = <40>;
+				overhead-bytes = <24>;		/* valid only if units are bytes */
+				4g-cos1 {
+					drop-policy = "red-32kb-128kb";
+					weight = <10>;
+					input-queues = <8018 8066>;
+					stats-class  = "cos1";
+				};
+				3g-cos1 {
+					drop-policy = "red-32kb-128kb";
+					weight = <10>;
+					input-queues = <8020>;
+					stats-class  = "cos1";
+				};
+				wifi-cos1 {
+					drop-policy = "red-32kb-128kb";
+					weight = <10>;
+					input-queues = <8022>;
+					stats-class  = "cos1";
+				};
+				linux-cos1 {
+					drop-policy = "red-32kb-128kb";
+					weight = <10>;
+					input-queues = <8074>;
+					stats-class  = "linux-cos1";
+				};
+			};
+			wrr-cos2 {
+				weighted-round-robin;		/* or weighted-round-robin */
+				byte-units;			/* packet-units or byte-units */
+				weight = <60>;
+				overhead-bytes = <24>;		/* valid only if units are bytes */
+				4g-cos2 {
+					drop-policy = "red-32kb-64kb";
+					weight = <15>;
+					input-queues = <8026 8067>;
+					stats-class  = "cos2";
+				};
+				3g-cos2 {
+					drop-policy = "red-32kb-64kb";
+					weight = <15>;
+					input-queues = <8028>;
+					stats-class  = "cos2";
+				};
+				wifi-cos2 {
+					drop-policy = "red-32kb-64kb";
+					weight = <15>;
+					input-queues = <8030>;
+					stats-class  = "cos2";
+				};
+				linux-cos2 {
+					drop-policy = "red-32kb-64kb";
+					weight = <15>;
+					input-queues = <8075>;
+					stats-class  = "linux-cos2";
+				};
+			};
+			wrr-cos3 {
+				weighted-round-robin;		/* or weighted-round-robin */
+				byte-units;			/* packet-units or byte-units */
+				weight = <80>;
+				overhead-bytes = <24>;		/* valid only if units are bytes */
+				4g-cos3 {
+					drop-policy = "tail-drop-64kb";
+					weight = <20>;
+					input-queues = <8034 8068>;
+					stats-class  = "cos3";
+				};
+				3g-cos3 {
+					drop-policy = "tail-drop-64kb";
+					weight = <20>;
+					input-queues = <8036>;
+					stats-class  = "cos3";
+				};
+				wifi-cos3 {
+					drop-policy = "tail-drop-64kb";
+					weight = <20>;
+					input-queues = <8038>;
+					stats-class  = "cos3";
+				};
+				linux-cos3 {
+					drop-policy = "tail-drop-64kb";
+					weight = <20>;
+					input-queues = <8076>;
+					stats-class  = "linux-cos3";
+				};
+			};
+		};
+
+		best-effort {
+			byte-units;		/* packet-units or byte-units */
+			priority = <2>;
+			drop-policy = "tail-drop-64kb";
+			fastpath-best-effort {
+				// queues between 8000 to 8063 not assigned
+				// in the above nodes are assigned below as
+				// unclassified DSCP values
+				// queues between 8064 to 8071 not assigned
+				// in the above nodes are assigned below as
+				// unclassified VLAN p-bit values
+				input-queues = <8000 8001 8002 8003 8004 
+						8005 8006 8007 8008 8009 8011 
+						8013 8015 8016 8017 8019 8021
+						8023 8024 8025 8027 8029 8031 
+						8032 8033 8035 8037 8039 8040 
+						8041 8042 8043 8044 8045 8047 
+						8048 8049 8050 8051 8052 8053 
+						8054 8055 8056 8057 8058 8059
+						8060 8061 8062 8063 
+						8064 8069 8070>; 
+				stats-class  = "fastpath-be";
+			};
+			linux-best-effort {
+				input-queues = <8072>;
+				stats-class  = "linux-be";
+			};
+		};
+	};
 
 	soc6614@2000000 {
 		#address-cells = <1>;
@@ -612,9 +829,8 @@
 			ranges;
 			reg		= <0x2a00000 0xc0000>;
 			range		= <0 0x2000>;
-			regions		= <12 3>;
 			linkram0	= <0x80000 0x4000>;
-			link-index	= <0x1400 0x800>;
+			linkram1	= <0x0 0x10000>;
 
 			qmgrs {
 				#address-cells = <1>;
@@ -626,7 +842,7 @@
 					       0x2a62000 0x6000		/* 1 - status	*/
 					       0x2a68000 0x2000		/* 2 - config	*/
 					       0x2a6a000 0x4000		/* 3 - region	*/
-					       0x2a20000 0x20000	/* 4 - push	*/
+					       0x44040000 0x20000	/* 4 - push	*/
 					       0x2a20000 0x20000>;	/* 5 - pop	*/
 				};
 			};
@@ -684,23 +900,47 @@
 					irq-base = <150>;
 					reserved;
 				};
+				qos-inputs {
+					values			= <8000 192>;
+					pdsp-id			= <1>;
+					ticks-per-sec		= <10000>;
+					qos-cfg			= <4 50 1 1 0xf00 0 0>;
+					sched-port-configs	= <0 20 0x1c8>;
+					drop-out-profiles	= <0 36 0xc>;
+					drop-cfg-profiles	= <0 8 0x14>;
+					drop-queue-configs	= <0 80 0x4>;
+					statistics-profiles	= <0 48>;
+					drop-policies		= <&droppolicies>;
+					qos-tree		= <&qostree>;
+					reserved;
+				};
 				riotx {
 					values = <672 1>;
 					reserved;
 				};
 			};
+			regions {
+				#address-cells = <1>;
+				#size-cells = <1>;
+				ranges;
+				region-12 {
+					id = <12>;
+					values	= <4096 128>;	/* num_desc desc_size */
+					link-index = <0x4000>;
+				};
+			};
 			descriptors {
 				pool-net {
-					values = <768 128>;	/* num_desc desc_size */
-					address = <0>;
+					values = <2048 128>;	/* num_desc desc_size */
+					region-id = <12>;
 				};
 				pool-udma {
 					values = <1152 128>;	/* num_desc desc_size */
-					address = <0>;
+					region-id = <12>;
 				};
 				pool-rio {
 					values = <128 128>;
-					address = <0>;
+					region-id = <12>;
 				};
 			};
 			pdsps {
@@ -714,6 +954,14 @@
 					       0x2aa0000 0x3c8	   /*intd */
 					       0x2ab8000 0x4000>;  /*cmd*/
 					id = <0>;
+				};
+				pdsp1@0x2a61000 {
+					firmware = "keystone/qmss_qos.fw";
+					reg = <0x2a61000 0x1000    /*iram */
+					       0x2a6f000 0x1000    /*reg*/
+					       0x2aa0000 0x3c8	   /*intd */
+					       0x2abc000 0x4000>;  /*cmd*/
+					id = <1>;
 				};
 			};
 		};
@@ -1029,7 +1277,7 @@
 					complete-queue = <650>;
 					/* debug; */
 					/* channel = <0>; */
-					flow		= <30>;
+					flow		= <23>;
 				};
 				satx {
 					transmit;
@@ -1066,6 +1314,46 @@
 					/* debug; */
 					/* channel = <0>; */
 					flow		= <31>;
+				};
+				qos0 {
+					transmit;
+					label		= "qos0";
+					pool		= "pool-net";
+					submit-queue	= <8072>;
+					/* complete-queue = <xx>; */
+					/* debug; */
+					/* channel = <xx>; */
+					/* priority = <1>; */
+				};
+				qos1 {
+					transmit;
+					label		= "qos1";
+					pool		= "pool-net";
+					submit-queue	= <8073>;
+					/* complete-queue = <xx>; */
+					/* debug; */
+					/* channel = <xx>; */
+					/* priority = <1>; */
+				};
+				qos2 {
+					transmit;
+					label		= "qos2";
+					pool		= "pool-net";
+					submit-queue	= <8074>;
+					/* complete-queue = <xx>; */
+					/* debug; */
+					/* channel = <xx>; */
+					/* priority = <1>; */
+				};
+				qos3 {
+					transmit;
+					label		= "qos3";
+					pool		= "pool-net";
+					submit-queue	= <8075>;
+					/* complete-queue = <xx>; */
+					/* debug; */
+					/* channel = <xx>; */
+					/* priority = <1>; */
 				};
 			};
 		};
@@ -1134,6 +1422,7 @@
 
 				tx-channel = "nettx";
 				tx_queue_depth = <32>;
+				intf_tx_queues = <4>;
 
 				sgmii_module_ofs  = <0x100>;
 				switch_module_ofs = <0x800>;
@@ -1161,11 +1450,36 @@
 			};
 			pa: pa@2000000 {
 				label = "keystone-pa";
+				checksum-offload	= <2>;
+				txhook-order		= <10>;
+				txhook-softcsum		= <40>;
+				rxhook-order		= <10>;
 
 				tx_cmd_queue_depth	= <32>;
 				tx_data_queue_depth	= <32>;
 				rx_pool_depth		= <32>;
 				rx_buffer_size		= <128>;
+			};
+			qos: qos@0 {
+				label = "keystone-qos";
+				input-channels {
+					chan-0 {
+						tx-channel = "qos0";
+						tx_queue_depth = <256>;
+					};
+					chan-1 {
+						tx-channel = "qos1";
+						tx_queue_depth = <16>;
+					};
+					chan-2 {
+						tx-channel = "qos2";
+						tx_queue_depth = <16>;
+					};
+					chan-3 {
+						tx-channel = "qos3";
+						tx_queue_depth = <16>;
+					};
+				};
 			};
 			sa: pa@20c0000 {
 				label = "keystone-sa";
