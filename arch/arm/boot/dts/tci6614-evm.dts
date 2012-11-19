@@ -1699,5 +1699,21 @@
 				};
 			};
 		};
+
+		i2c@2530000 {
+			compatible = "ti,davinci-i2c";
+			reg = <0x02530000 0x1000>;
+			clock-frequency = <100000>;
+			clocks		= <&clki2c>;
+			interrupts = <342>;
+			interrupt-parent = <&virtintc>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			dtt@50 {
+				compatible = "at,24c1024";
+				reg = <0x50>;
+			};
+		};
 	};
 };
