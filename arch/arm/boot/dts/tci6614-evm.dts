@@ -8,6 +8,10 @@
 	#size-cells = <1>;
 	interrupt-parent = <&virtintc>;
 
+	aliases {
+		gpio0	= &gpio0;
+	};
+
 	chosen {
 		bootargs = "console=ttyS0,115200n8 mem=512M rootwait=1 rw ubi.mtd=2,2048 rootfstype=ubifs root=ubi0:rootfs";
 	};
@@ -1713,6 +1717,16 @@
 				compatible = "at,24c1024";
 				reg = <0x50>;
 			};
+		};
+
+		gpio0: gpio@2320000 {
+			compatible = "ti,keystone-gpio";
+			reg = <0x02320000 0x10
+				0x02320010 0x28>;
+			gpio-controller;
+			#gpio-cells = <2>;
+			clocks = <&clkgpio>;
+			clock-names = "gpio";
 		};
 	};
 };
