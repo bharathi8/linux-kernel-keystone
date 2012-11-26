@@ -256,8 +256,9 @@
 		ranges;
 
 		rstctrl:rstctrl@23100e8 {
-			compatible = "ti,pllctrl-reset";
-			reg = <0x023100e8 4>;
+			compatible = "ti,keystone-reset";
+			reg = <0x023100e8 4	/* pll reset control */
+				0x02620318 4>;	/* rstmux8 register */
 		};
 
 		clocks {
@@ -1727,6 +1728,13 @@
 			#gpio-cells = <2>;
 			clocks = <&clkgpio>;
 			clock-names = "gpio";
+		};
+
+		wdt: wdt@2280000 {
+			compatible = "ti,davinci-wdt";
+			reg = <0x02280000 0x80>;
+			clocks = <&clktimer1>;
+			clock-names = "watchdog";
 		};
 	};
 };
