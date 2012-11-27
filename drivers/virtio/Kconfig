@@ -52,4 +52,14 @@ config VIRTIO_MMIO_CMDLINE_DEVICES
 
 	 If unsure, say 'N'.
 
+config VIRTIO_KEYSTONE
+	tristate "Driver for keystone hwqueue virtio devices (EXPERIMENTAL)"
+	depends on TI_KEYSTONE
+	select VIRTIO
+	---help---
+	  This drivers provides support for the hardware queue based virtio
+	  platform device driver on TI Keystone devices.
+
+	  If unsure, say N.
+
 endmenu
