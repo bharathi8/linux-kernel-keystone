@@ -932,8 +932,13 @@
 				ranges;
 				region-12 {
 					id = <12>;
-					values	= <4096 128>;	/* num_desc desc_size */
+					values	= <2048 128>;	/* num_desc desc_size */
 					link-index = <0x4000>;
+				};
+				region-13 {
+					id = <13>;
+					values	= <2048 256>;	/* num_desc desc_size */
+					link-index = <0x4800>;
 				};
 			};
 			descriptors {
@@ -941,13 +946,13 @@
 					values = <2048 128>;	/* num_desc desc_size */
 					region-id = <12>;
 				};
-				pool-udma {
-					values = <1152 128>;	/* num_desc desc_size */
-					region-id = <12>;
-				};
 				pool-rio {
-					values = <128 128>;
-					region-id = <12>;
+					values = <128 256>;
+					region-id = <13>;
+				};
+				pool-udma {
+					values = <1636 256>;	/* num_desc desc_size */
+					region-id = <13>;
 				};
 			};
 			pdsps {
@@ -973,25 +978,24 @@
 			};
 		};
 
-		infradma: pktdma@2a6c000 {
-			compatible = "ti,keystone-pktdma";
+		virtio-infradma@2a6c000 {
+			compatible = "ti,virtio-keystone";
 			reg = <0x2a6c000 0x100		/* 0 - global  */
 			       0x2a6c400 0x400		/* 1 - txchan  */
 			       0x2a6c800 0x400		/* 2 - rxchan  */
-			       0x2a6cc00 0x400		/* 3 - txsched */
+			       0x2a6cc00 0x080		/* 3 - txsched */
 			       0x2a6d000 0x400>;	/* 4 - rxflow  */
-			clocks = <&clkpktproc>;
+			clocks = <&clkmodrst0>;
 			loop-back;
 			/* big-endian; */
 			enable-all;
-			/* debug; */
+			debug;
 			/* rx-priority = <0>; */
 			/* tx-priority = <0>; */
-			logical-queue-managers	= <2>;
-			queues-per-queue-manager = <4096>;
-			qm-base-address = <0x34020000 0x34030000>;
+			queue-managers = <0x34020000 0x34030000>;
 
-			channels {
+			udma0 {
+				id = <10>;
 				udmatx0 {
 					transmit;
 					label		= "udmatx0";
