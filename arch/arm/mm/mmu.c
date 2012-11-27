@@ -603,11 +603,20 @@ static void __init alloc_init_section(pud_t *pud, unsigned long addr,
 
 		flush_pmd_entry(p);
 	} else {
+#ifndef CONFIG_ARM_LPAE
 		/*
 		 * No need to loop; pte's aren't interested in the
 		 * individual L1 entries.
 		 */
 		alloc_init_pte(pmd, addr, end, __phys_to_pfn(phys), type);
+#else
+		unsigned long next;
+		do {
+			next = pmd_addr_end(addr, end);
+			alloc_init_pte(pmd, addr, next, __phys_to_pfn(phys), type);
+			phys += next - addr;
+		} while (pmd++, addr=next, addr != end);
+#endif
 	}
 }
 
