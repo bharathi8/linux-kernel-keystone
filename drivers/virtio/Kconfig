@@ -62,4 +62,14 @@ config VIRTIO_KEYSTONE
 
 	  If unsure, say N.
 
+config VIRTIO_UDMA
+	tristate "Driver for user-space virtio access (EXPERIMENTAL)"
+	select VIRTIO
+	select VIRTIO_RING
+	select CMA
+	---help---
+	  This drivers provides support for user-space access to virtio devices
+
+	  If unsure, say N.
+
 endmenu

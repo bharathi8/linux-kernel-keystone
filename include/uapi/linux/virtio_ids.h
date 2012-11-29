@@ -40,4 +40,6 @@
 #define VIRTIO_ID_RPROC_SERIAL 11 /* virtio remoteproc serial link */
 #define VIRTIO_ID_CAIF	       12 /* Virtio caif */
 
+#define VIRTIO_ID_UDMA		10 /* virtio user-space driver */
+
 #endif /* _LINUX_VIRTIO_IDS_H */
