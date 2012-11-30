@@ -1366,6 +1366,26 @@
 					/* channel = <xx>; */
 					/* priority = <1>; */
 				};
+				qos4 {
+					transmit;
+					label		= "qos4";
+					pool		= "pool-net";
+					submit-queue	= <8076>;
+					/* complete-queue = <xx>; */
+					/* debug; */
+					/* channel = <xx>; */
+					/* priority = <1>; */
+				};
+				qos5 {
+					transmit;
+					label		= "qos5";
+					pool		= "pool-net";
+					submit-queue	= <8077>;
+					/* complete-queue = <xx>; */
+					/* debug; */
+					/* channel = <xx>; */
+					/* priority = <1>; */
+				};
 			};
 		};
 
@@ -1433,7 +1453,7 @@
 
 				tx-channel = "nettx";
 				tx_queue_depth = <32>;
-				intf_tx_queues = <4>;
+				intf_tx_queues = <6>;
 
 				sgmii_module_ofs  = <0x100>;
 				switch_module_ofs = <0x800>;
@@ -1476,19 +1496,27 @@
 				input-channels {
 					chan-0 {
 						tx-channel = "qos0";
-						tx_queue_depth = <256>;
+						tx_queue_depth = <128>;
 					};
 					chan-1 {
 						tx-channel = "qos1";
-						tx_queue_depth = <16>;
+						tx_queue_depth = <128>;
 					};
 					chan-2 {
 						tx-channel = "qos2";
-						tx_queue_depth = <16>;
+						tx_queue_depth = <128>;
 					};
 					chan-3 {
 						tx-channel = "qos3";
-						tx_queue_depth = <16>;
+						tx_queue_depth = <128>;
+					};
+					chan-4 {
+						tx-channel = "qos4";
+						tx_queue_depth = <128>;
+					};
+					chan-5 {
+						tx-channel = "qos5";
+						tx_queue_depth = <128>;
 					};
 				};
 			};
