@@ -1669,12 +1669,11 @@
 			clocks		= <&clkuart1>;
 		};
 
-		spi:spi0@20BF0000 {
+		spi0:spi@20BF0000 {
 			#address-cells			= <1>;
 			#size-cells			= <0>;
-			compatible			= "ti,davinci-spi";
+			compatible			= "ti,davinci-spi-v1";
 			reg				= <0x20BF0000 0x1000>;
-			ti,davinci-spi-version		= "1.0";
 			ti,davinci-spi-num-cs		= <4>;
 			ti,davinci-spi-intr-line	= <0>;
 			interrupts			= <338>;
