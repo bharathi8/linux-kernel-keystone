@@ -1748,5 +1748,10 @@
 			clocks = <&clktimer1>;
 			clock-names = "watchdog";
 		};
+
+		pmu {
+			compatible = "arm,cortex-a8-pmu";
+			interrupts = <3 0xf02>;
+		};
 	};
 };
