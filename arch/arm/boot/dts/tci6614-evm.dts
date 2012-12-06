@@ -1749,6 +1749,13 @@
 			clock-names = "watchdog";
 		};
 
+		timer: timer@2270000 {
+			compatible = "ti,tci6614-timer";
+			reg = <0x02270000 0x80>;
+			clocks = <&clktimer0>;
+			interrupts = <185 0xf02 186 0xf02>;
+		};
+
 		pmu {
 			compatible = "arm,cortex-a8-pmu";
 			interrupts = <3 0xf02>;
