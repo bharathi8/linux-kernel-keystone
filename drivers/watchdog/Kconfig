@@ -278,7 +278,7 @@ config IOP_WATCHDOG
 
 config DAVINCI_WATCHDOG
 	tristate "DaVinci watchdog"
-	depends on ARCH_DAVINCI
+	depends on ARCH_DAVINCI || ARCH_KEYSTONE
 	help
 	  Say Y here if to include support for the watchdog timer
 	  in the DaVinci DM644x/DM646x processors.
