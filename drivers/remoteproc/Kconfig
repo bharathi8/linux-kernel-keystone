@@ -41,4 +41,17 @@ config STE_MODEM_RPROC
 	  This can be either built-in or a loadable module.
 	  If unsure say N.
 
+config REMOTEPROC_USER
+	tristate "OMAP remoteproc support"
+	depends on EXPERIMENTAL && UIO
+	select REMOTEPROC
+	select RPMSG
+	help
+	  Say y here to support a user-land driven interface to the remoteproc
+	  framework.  This allows for more complex application scenarios where
+	  a simple in-kernel loaders/driver doesn't fit.
+
+	  It's safe to say n here if you're not interested in multimedia
+	  offloading or just want a bare minimum kernel.
+
 endmenu
