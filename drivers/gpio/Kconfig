@@ -104,6 +104,13 @@ config GPIO_DA9055
 config GPIO_MAX730X
 	tristate
 
+config GPIO_KEYSTONE
+	bool "Keystone GPIO support"
+	default y if ARCH_KEYSTONE
+	help
+	  Say yes here to support the GPIO interface available on
+	  Keystone devices.
+
 comment "Memory mapped GPIO drivers:"
 
 config GPIO_CLPS711X

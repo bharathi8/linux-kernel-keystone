@@ -1,0 +1,70 @@
+Keystone GPIO controller bindings
+
+Required properties:
+- compatible : Should be "ti,keystone-gpio"
+- reg : Address and length of the register set for the device. For
+	first bank, 2 reg entries required. At index 0 specify base
+	of common registers at the beginning of gpio address space that
+	includes BINTEN. This should have a size 0x10. At second index
+	specify base address of bank0 & 1. For subsequent bank, only
+	one reg entry should be specified and should be poiting to
+	base of the bank.
+- gpio-controller : Marks the device node as a gpio controller.
+- #gpio-cells : Should be 2.  First cell specify the pin number and
+	second is optional parameter (unused).
+- clocks: phandle to clock node
+- clock-names: name of the input clock
+- interrupt-controller: Marks the device node as an interrupt controller.
+- #interrupt-cells: Should be 2. The first cell is the GPIO number.
+  The second cell bits[3:0] is used to specify trigger type:
+	1 = low-to-high edge triggered.
+	2 = high-to-low edge triggered.
+
+Note: Each GPIO port should have an alias correctly numbered in "aliases"
+node.
+
+Examples:
+
+aliases {
+        gpio0 = &gpio0;
+        gpio1 = &gpio1;
+        gpio2 = &gpio2;
+        gpio3 = &gpio3;
+        gpio4 = &gpio4;
+};
+
+gpio0: gpio@2320000 {
+	compatible = "ti,keystone-gpio";
+	reg = <0x02320000 0x10
+		0x02320010 0x28>;
+	gpio-controller;
+	#gpio-cells = <2>;
+	interrupt-controller;
+	#interrupt-cells = <2>;
+	clocks = <&clkgpio>;
+	clock-names = "gpio";
+};
+
+To use gpio pins in the driver, include the phandle to the gpio device bindings
+in the specific driver device bindings.
+
+Example:
+
+following commands in the DT bindings of the device refers to gpio0, pin 20:-
+
+	test-gpios = <&gpio0 20 0x2>;
+
+Third argument (0x2) is the flag and is currently not used. Driver typically use
+the API of_get_named_gpio_flags() to refers to the specific gpio pin and use GPIO
+libraries to configure the pin.
+
+To use the gpio pin as an interrupt line, set the interrupt-parent to
+gpio driver device node that is associated with the gpio pin and include a
+interrupts property in the driver's device bindings to specify the irq number and
+flag as
+
+	interrupts = <20 0x2>
+	interrupt-parent = <&gpio0>;
+
+where gpio pin 20 is configured as interrupt line and flag is set to high to low
+edge triggered. gpio0 node is the interrupt-parent.
