@@ -814,7 +814,10 @@ static int rproc_fw_boot(struct rproc *rproc, const struct firmware *fw)
 	if (ret)
 		return ret;
 
-	dev_info(dev, "Booting fw image %s, size %zd\n", name, fw->size);
+	if (fw)
+		dev_info(dev, "Booting fw image %s, size %zd\n", name, fw->size);
+	else
+		dev_info(dev, "Booting unspecified firmware\n");
 
 	/*
 	 * if enabling an IOMMU isn't relevant for this rproc, this is
@@ -833,6 +836,15 @@ static int rproc_fw_boot(struct rproc *rproc, const struct firmware *fw)
 	if (!table) {
 		ret = -EINVAL;
 		goto clean_up;
+	}
+
+	if (!fw) {
+		/* handle vdev resources */
+		ret = rproc_handle_virtio_rsc(rproc, table, tablesz);
+		if (ret) {
+			dev_err(dev, "Failed to process resources: %d\n", ret);
+			goto clean_up;
+		}
 	}
 
 	/* handle fw resources which are required to boot rproc */
@@ -907,6 +919,12 @@ static int rproc_add_virtio_devices(struct rproc *rproc)
 
 	/* rproc_del() calls must wait until async loader completes */
 	init_completion(&rproc->firmware_loading_complete);
+
+	if (!rproc->firmware) {
+		dev_warn(&rproc->dev, "no firmware found\n");
+		complete_all(&rproc->firmware_loading_complete);
+		return 0;
+	}
 
 	/*
 	 * We must retrieve early virtio configuration info from
@@ -999,7 +1017,7 @@ static void rproc_crash_handler_work(struct work_struct *work)
  */
 int rproc_boot(struct rproc *rproc)
 {
-	const struct firmware *firmware_p;
+	const struct firmware *firmware_p = NULL;
 	struct device *dev;
 	int ret;
 
@@ -1014,13 +1032,6 @@ int rproc_boot(struct rproc *rproc)
 	if (ret) {
 		dev_err(dev, "can't lock rproc %s: %d\n", rproc->name, ret);
 		return ret;
-	}
-
-	/* loading a firmware is required */
-	if (!rproc->firmware) {
-		dev_err(dev, "%s: no firmware to load\n", __func__);
-		ret = -EINVAL;
-		goto unlock_mutex;
 	}
 
 	/* prevent underlying implementation from being removed */
@@ -1038,16 +1049,19 @@ int rproc_boot(struct rproc *rproc)
 
 	dev_info(dev, "powering up %s\n", rproc->name);
 
-	/* load firmware */
-	ret = request_firmware(&firmware_p, rproc->firmware, dev);
-	if (ret < 0) {
-		dev_err(dev, "request_firmware failed: %d\n", ret);
-		goto downref_rproc;
+	if (rproc->firmware) {
+		/* load firmware */
+		ret = request_firmware(&firmware_p, rproc->firmware, dev);
+		if (ret < 0) {
+			dev_err(dev, "request_firmware failed: %d\n", ret);
+			goto downref_rproc;
+		}
 	}
 
 	ret = rproc_fw_boot(rproc, firmware_p);
 
-	release_firmware(firmware_p);
+	if (firmware_p)
+		release_firmware(firmware_p);
 
 downref_rproc:
 	if (ret) {
