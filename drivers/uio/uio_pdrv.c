@@ -13,6 +13,7 @@
 #include <linux/stringify.h>
 #include <linux/module.h>
 #include <linux/slab.h>
+#include <linux/of.h>
 
 #define DRIVER_NAME "uio_pdrv"
 
@@ -27,6 +28,14 @@ static int uio_pdrv_probe(struct platform_device *pdev)
 	struct uio_mem *uiomem;
 	int ret = -ENODEV;
 	int i;
+
+	if (!uioinfo && pdev->dev.of_node) {
+		uioinfo = kzalloc(sizeof(*uioinfo), GFP_KERNEL);
+		if (uioinfo) {
+			uioinfo->name = pdev->dev.of_node->name;
+			uioinfo->version = "devicetree";
+		}
+	}
 
 	if (!uioinfo || !uioinfo->name || !uioinfo->version) {
 		dev_dbg(&pdev->dev, "%s: err_uioinfo\n", __func__);
@@ -96,12 +105,23 @@ static int uio_pdrv_remove(struct platform_device *pdev)
 	return 0;
 }
 
+#ifdef CONFIG_OF
+static const struct of_device_id uio_of_match[] = {
+	{ .compatible = "linux,uio", },
+	{ /* empty for now */ },
+};
+MODULE_DEVICE_TABLE(of, uio_of_match);
+#else
+# define uio_of_genirq_match NULL
+#endif
+
 static struct platform_driver uio_pdrv = {
 	.probe = uio_pdrv_probe,
 	.remove = uio_pdrv_remove,
 	.driver = {
 		.name = DRIVER_NAME,
 		.owner = THIS_MODULE,
+		.of_match_table = uio_of_match,
 	},
 };
 
