@@ -667,6 +667,7 @@
 				reg = <0x02350000 4096>;
 				lpsc = <23>;
 				pd = <13>;
+				ti,psc-lreset;
 			};
 
 			clkgem1: clkgem1 {
@@ -678,6 +679,7 @@
 				reg = <0x02350000 4096>;
 				lpsc = <24>;
 				pd = <14>;
+				ti,psc-lreset;
 			};
 
 			clkgem2: clkgem2 {
@@ -689,6 +691,7 @@
 				reg = <0x02350000 4096>;
 				lpsc = <26>;
 				pd = <15>;
+				ti,psc-lreset;
 			};
 
 			clkgem3: clkgem3 {
@@ -700,6 +703,7 @@
 				reg = <0x02350000 4096>;
 				lpsc = <28>;
 				pd = <16>;
+				ti,psc-lreset;
 			};
 
 			clkrsax21: clkrsax21 {
