@@ -1776,6 +1776,34 @@
 			clock-names = "gpio";
 		};
 
+		ipcgpio0: gpio@2620240 {
+			compatible = "ti,keystone-ipc-gpio";
+			reg = <0x02620240 4>;
+			gpio-controller;
+			#gpio-cells = <2>;
+		};
+
+		ipcgpio1: gpio@2620244 {
+			compatible = "ti,keystone-ipc-gpio";
+			reg = <0x02620244 4>;
+			gpio-controller;
+			#gpio-cells = <2>;
+		};
+
+		ipcgpio2: gpio@2620248 {
+			compatible = "ti,keystone-ipc-gpio";
+			reg = <0x02620248 4>;
+			gpio-controller;
+			#gpio-cells = <2>;
+		};
+
+		ipcgpio3: gpio@262024c {
+			compatible = "ti,keystone-ipc-gpio";
+			reg = <0x0262024c 4>;
+			gpio-controller;
+			#gpio-cells = <2>;
+		};
+
 		wdt: wdt@2280000 {
 			compatible = "ti,davinci-wdt";
 			reg = <0x02280000 0x80>;
