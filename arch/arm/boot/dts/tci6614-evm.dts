@@ -1549,6 +1549,62 @@
 			#interrupt-cells = <2>;
 		};
 
+		dsp0 {
+			compatible = "linux,rproc-user";
+			reg = <0x02620040 4
+			       0x02350a5c 4
+			       0x02620240 4
+			       0x10800000 0x00100000>;
+			reg-names = "boot-address", "psc-mdctl", "ipcgr", "l2ram";
+			interrupt-parent = <&ipcirq>;
+			interrupts = <0 0 4 0>;
+			kick-gpio = <&ipcgpio0 0 0>;
+			clocks = <&clkgem0>;
+		};
+
+		dsp1 {
+			compatible = "linux,rproc-user";
+			reg = <0x02620044 4
+			       0x02350a60 4
+			       0x02620244 4
+			       0x20800000 0x00100000>;
+			reg-names = "boot-address", "psc-mdctl", "ipcgr", "l2ram";
+			interrupts = <1 0 5 0>;
+			kick-gpio = <&ipcgpio1 0 0>;
+			clocks = <&clkgem1>;
+		};
+
+		dsp2 {
+			compatible = "linux,rproc-user";
+			reg = <0x02620048 4
+			       0x02350a68 4
+			       0x02620248 4
+			       0x30800000 0x00100000>;
+			reg-names = "boot-address", "psc-mdctl", "ipcgr", "l2ram";
+			interrupts = <2 0 6 0>;
+			kick-gpio = <&ipcgpio2 0 0>;
+			clocks = <&clkgem2>;
+		};
+
+		dsp3 {
+			compatible = "linux,rproc-user";
+			reg = <0x0262004c 4
+			       0x02350a70 4
+			       0x0262024c 4
+			       0x40800000 0x00100000>;
+			reg-names = "boot-address", "psc-mdctl", "ipcgr", "l2ram";
+			interrupts = <3 0 7 0>;
+			kick-gpio = <&ipcgpio3 0 0>;
+			clocks = <&clkgem3>;
+		};
+
+		dspmem {
+			compatible = "linux,uio";
+			reg  = <0x0c000000 0x00200000	/* msmc ram */
+				0xa0000000 0x20000000>;	/* corepac's ddr3 */
+			reg-names = "msmcram", "ddr3";
+		};
+
 		rapidio: rapidio@2900000 {
 			#address-cells = <1>;
 			#size-cells = <1>;
