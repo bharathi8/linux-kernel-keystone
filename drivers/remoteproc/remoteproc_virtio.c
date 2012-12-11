@@ -44,7 +44,7 @@ static void rproc_virtio_notify(struct virtqueue *vq)
 /**
  * rproc_vq_interrupt() - tell remoteproc that a virtqueue is interrupted
  * @rproc: handle to the remote processor
- * @notifyid: index of the signalled virtqueue (unique per this @rproc)
+ * @notifyid: index of the signalled virtqueue (-1 for all vqs)
  *
  * This function should be called by the platform-specific rproc driver,
  * when the remote processor signals that a specific virtqueue has pending
@@ -56,14 +56,21 @@ static void rproc_virtio_notify(struct virtqueue *vq)
 irqreturn_t rproc_vq_interrupt(struct rproc *rproc, int notifyid)
 {
 	struct rproc_vring *rvring;
+	irqreturn_t ret = IRQ_NONE;
+	int start = (notifyid >= 0) ? notifyid : 0;
+	int end   = (notifyid >= 0) ? notifyid : rproc->max_notifyid;
 
 	dev_dbg(&rproc->dev, "vq index %d is interrupted\n", notifyid);
 
-	rvring = idr_find(&rproc->notifyids, notifyid);
-	if (!rvring || !rvring->vq)
-		return IRQ_NONE;
+	for (notifyid = start; notifyid <= end; notifyid++) {
+		rvring = idr_find(&rproc->notifyids, notifyid);
+		if (!rvring || !rvring->vq)
+			continue;
+		if (vring_interrupt(0, rvring->vq) == IRQ_HANDLED)
+			ret = IRQ_HANDLED;
+	}
 
-	return vring_interrupt(0, rvring->vq);
+	return ret;
 }
 EXPORT_SYMBOL(rproc_vq_interrupt);
 
