@@ -111,6 +111,14 @@ config GPIO_KEYSTONE
 	  Say yes here to support the GPIO interface available on
 	  Keystone devices.
 
+config GPIO_KEYSTONE_IPC
+	bool "Keystone IPC GPIO support"
+	default y if ARCH_KEYSTONE
+	help
+	  Say yes here to support the GPIO driver for Keystone IPC. This defines
+	  upto 28 GPIOs per Remote DSP core. This is used to interrupt the remote
+	  DSP core.
+
 comment "Memory mapped GPIO drivers:"
 
 config GPIO_CLPS711X
