@@ -209,7 +209,10 @@ int rproc_alloc_vring(struct rproc_vdev *rvdev, int i)
 	 * this call will also configure the IOMMU for us
 	 * TODO: let the rproc know the da of this vring
 	 */
-	va = dma_alloc_coherent(dev->parent, size, &dma, GFP_KERNEL);
+	if (rproc->ops->alloc)
+		va = rproc->ops->alloc(dev->parent, size, &dma, GFP_KERNEL);
+	else
+		va = dma_alloc_coherent(dev->parent, size, &dma, GFP_KERNEL);
 	if (!va) {
 		dev_err(dev->parent, "dma_alloc_coherent failed\n");
 		return -EINVAL;
@@ -283,9 +286,13 @@ void rproc_free_vring(struct rproc_vring *rvring)
 {
 	int size = PAGE_ALIGN(vring_size(rvring->len, rvring->align));
 	struct rproc *rproc = rvring->rvdev->rproc;
+	struct device *dev = rproc->dev.parent;
 	int maxid = 0;
 
-	dma_free_coherent(rproc->dev.parent, size, rvring->va, rvring->dma);
+	if (rproc->ops->free)
+		rproc->ops->free(dev, size, rvring->va, rvring->dma);
+	else
+		dma_free_coherent(dev, size, rvring->va, rvring->dma);
 	idr_remove(&rproc->notifyids, rvring->notifyid);
 
 	/* Find the largest remaining notifyid */

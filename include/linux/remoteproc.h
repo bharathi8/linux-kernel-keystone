@@ -335,6 +335,10 @@ struct rproc_ops {
 	int (*start)(struct rproc *rproc);
 	int (*stop)(struct rproc *rproc);
 	void (*kick)(struct rproc *rproc, int vqid);
+	void *(*alloc)(struct device *dev, size_t size, dma_addr_t *handle,
+		       gfp_t gfp);
+	void (*free)(struct device *dev, size_t size, void *cpu,
+		     dma_addr_t handle);
 };
 
 /**
