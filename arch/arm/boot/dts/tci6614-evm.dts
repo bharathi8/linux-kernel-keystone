@@ -96,6 +96,7 @@
 			weighted-round-robin;
 			priority = <1>;
 			byte-units;			/* packet-units or byte-units */
+			output-rate = <25000000 25000>;
 			overhead-bytes = <24>;		/* valid only if units are bytes */
 			wrr-cos0 {
 				weighted-round-robin;		/* or weighted-round-robin */
