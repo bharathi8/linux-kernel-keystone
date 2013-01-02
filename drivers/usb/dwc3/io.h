@@ -43,24 +43,35 @@
 
 #include "core.h"
 
-static inline u32 dwc3_readl(struct dwc3 *dwc, u32 offset)
+#define dwc3_readl(dwc, offset)			\
+	__dwc3_readl(dwc, offset, #offset, __FILE__, __LINE__)
+#define dwc3_writel(dwc, offset, value)		\
+	__dwc3_writel(dwc, offset, value, #offset, __FILE__, __LINE__)
+
+/*
+ * We requested the mem region starting from the Globals address
+ * space, see dwc3_probe in core.c.
+ * However, the offsets are given starting from xHCI address space.
+ */
+#define reg_addr(dwc, offset)			\
+	((dwc)->regs + ((offset) - DWC3_GLOBALS_REGS_START))
+
+static inline u32 __dwc3_readl(struct dwc3 *dwc, u32 offset, const char *reg,
+			       const char *file, int line)
 {
-	/*
-	 * We requested the mem region starting from the Globals address
-	 * space, see dwc3_probe in core.c.
-	 * However, the offsets are given starting from xHCI address space.
-	 */
-	return readl(dwc->regs + (offset - DWC3_GLOBALS_REGS_START));
+	u32 value = readl(reg_addr(dwc, offset));
+
+	dev_vdbg(dwc->dev, "[%s (%05x)] --> %08x @%s:%d\n",
+		 reg, offset, value, file, line);
+	return value;
 }
 
-static inline void dwc3_writel(struct dwc3 *dwc, u32 offset, u32 value)
+static inline void __dwc3_writel(struct dwc3 *dwc, u32 offset, u32 value,
+				 const char *reg, const char *file, int line)
 {
-	/*
-	 * We requested the mem region starting from the Globals address
-	 * space, see dwc3_probe in core.c.
-	 * However, the offsets are given starting from xHCI address space.
-	 */
-	writel(value, dwc->regs + (offset - DWC3_GLOBALS_REGS_START));
+	dev_vdbg(dwc->dev, "[%s (%05x)] <-- %08x @%s:%d\n",
+		 reg, offset, value, file, line);
+	writel(value, reg_addr(dwc, offset));
 }
 
 #endif /* __DRIVERS_USB_DWC3_IO_H */
