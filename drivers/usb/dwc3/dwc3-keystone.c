@@ -53,13 +53,18 @@
 #include "core.h"
 #include "io.h"
 
+#define BITS(n)			(BIT(n) - 1)
+#define BITFIELD(x, s, n)	(((x) & BITS(n)) << (s))
+#define MASK			0xffffffff
+
 struct kdwc3_phy_regs {
-	u32	phy_utmi;
-	u32	phy_pipe;
-	u32	phy_param_ctrl_1;
-	u32	phy_param_ctrl_2;
-	u32	phy_clock;
-	u32	phy_pll;
+	u32	phy_utmi;		/* USB_PHY_CTL0 */
+	u32	phy_pipe;		/* USB_PHY_CTL1 */
+	u32	phy_param_ctrl_1;	/* USB_PHY_CTL2 */
+	u32	phy_param_ctrl_2;	/* USB_PHY_CTL3 */
+	u32	phy_clock;		/* USB_PHY_CTL4 */
+#define PHY_REF_SSP_EN(x)		BITFIELD(x, 29, 1)
+	u32	phy_pll;		/* USB_PHY_CTL5 */
 };
 
 struct kdwc3_irq_regs {
@@ -88,53 +93,26 @@ struct dwc3_keystone {
 	u32			phy_regs_size;
 	u32			usbss_regs_base;
 	u32			usbss_regs_size;
-	int			hwirq, virq;
+	int			virq;
 
 	struct kdwc3_phy_regs __iomem	*phy;
 	struct kdwc3_irq_regs __iomem	*usbss;
 };
 
-/* TODO: calculate and/or parametrize */
-#define PHY_SSC_REF_CLK_SEL		0
-#define PHY_SSC_REF_CLK_SEL_SHIFT	4
-#define PHY_MPLL_MULT			0x19
-#define PHY_MPLL_MULT_SHIFT		13
-#define PHY_REF_CLKDIV2			0
-
-#define PHY_SSC_EN			BIT(31)
-#define PHY_REF_USE_PAD			BIT(30)
-#define PHY_REF_SSP_EN			BIT(29)
-#define PHY_FSEL			0x27
-#define PHY_FSEL_SHIFT			22
-#define PHY_RETENABLEEN			BIT(21)
-#define PHY_REFCLKSEL			0x2
-#define PHY_REFCLKSEL_SHIFT		19
-#define PHY_OTGDISABLE			BIT(15)
-
-#define PHY_CLOCK_DEFAULT	(PHY_SSC_EN				| \
-				 PHY_REF_USE_PAD			| \
-				 PHY_REF_SSP_EN				| \
-				 PHY_FSEL << PHY_FSEL_SHIFT		| \
-				 PHY_RETENABLEEN			| \
-				 PHY_REFCLKSEL << PHY_REFCLKSEL_SHIFT	| \
-				 PHY_OTGDISABLE)
-#define PHY_PLL_DEFAULT		(PHY_SSC_REF_CLK_SEL			| \
-				 PHY_MPLL_MULT << PHY_MPLL_MULT_SHIFT)
-
 static int __devinit kdwc3_phy_init(struct dwc3_keystone *kdwc)
 {
 	int error;
-	u32 rev;
+	u32 val;
 
-	/* enable the phy refclk clock gate  */
-	writel(PHY_REF_SSP_EN, &kdwc->phy->phy_clock);
+	val  = readl(&kdwc->phy->phy_clock);
+	writel(val | PHY_REF_SSP_EN(1), &kdwc->phy->phy_clock);
 	udelay(20);
 
 	error = clk_prepare_enable(kdwc->clk);
 	if (error < 0) {
 		dev_dbg(kdwc->dev, "unable to enable usb clock, err %d\n",
 			error);
-		writel(0, &kdwc->phy->phy_clock);
+		writel(val, &kdwc->phy->phy_clock);
 		return error;
 	}
 
@@ -143,22 +121,21 @@ static int __devinit kdwc3_phy_init(struct dwc3_keystone *kdwc)
 	while (readl(&kdwc->usbss->sysconfig) & 1)
 		;
 
-	rev = readl(&kdwc->usbss->revision);
-	dev_info(kdwc->dev, "usbss revision %x\n", rev);
-
-	/* configure the phy */
-	writel(PHY_CLOCK_DEFAULT, &kdwc->phy->phy_clock);
-	writel(PHY_PLL_DEFAULT, &kdwc->phy->phy_pll);
+	val = readl(&kdwc->usbss->revision);
+	dev_info(kdwc->dev, "usbss revision %x\n", val);
 
 	return 0;
 }
 
 static void kdwc3_phy_exit(struct dwc3_keystone *kdwc)
 {
+	u32 val;
+
 	clk_disable_unprepare(kdwc->clk);
 
-	/* disable the phy refclk clock gate */
-	writel(0, &kdwc->phy->phy_clock);
+	val  = readl(&kdwc->phy->phy_clock);
+	val &= ~PHY_REF_SSP_EN(MASK);
+	writel(val, &kdwc->phy->phy_clock);
 }
 
 static void kdwc3_dev_exit(struct dwc3_keystone *kdwc)
@@ -175,7 +152,6 @@ static void kdwc3_irq_mask(struct irq_data *d)
 {
 	struct dwc3_keystone *kdwc = d->chip_data;
 	unsigned int irq = d->hwirq;
-	dev_dbg(kdwc->dev, "irq: mask %d\n", irq);
 	writel(1, &kdwc->usbss->irqs[irq].enable_clr);
 }
 
@@ -183,7 +159,6 @@ static void kdwc3_irq_unmask(struct irq_data *d)
 {
 	struct dwc3_keystone *kdwc = d->chip_data;
 	unsigned int irq = d->hwirq;
-	dev_dbg(kdwc->dev, "irq: unmask %d\n", irq);
 	writel(1, &kdwc->usbss->irqs[irq].enable_set);
 }
 
@@ -191,20 +166,7 @@ static void kdwc3_irq_ack(struct irq_data *d)
 {
 	struct dwc3_keystone *kdwc = d->chip_data;
 	unsigned int irq = d->hwirq;
-	dev_dbg(kdwc->dev, "irq: ack %d\n", irq);
-	writel(BIT(irq), &kdwc->usbss->irq_eoi);
-}
-
-static bool kdwc3_irq_pending(struct dwc3_keystone *kdwc, int irq)
-{
-	unsigned enabled, pending;
-
-	enabled = readl(&kdwc->usbss->irqs[irq].enable_set) & 1;
-	pending = readl(&kdwc->usbss->irqs[irq].raw_status) & 1;
-	dev_dbg(kdwc->dev, "irq: %d %s, %s\n", irq,
-		pending ? "pending" : "not pending",
-		enabled ? "enabled" : "not enabled");
-	return !!pending;
+	writel(1, &kdwc->usbss->irqs[irq].status);
 }
 
 static inline void chained_irq_enter(struct irq_chip *chip,
@@ -237,48 +199,76 @@ static void kdwc3_irq_handler(unsigned int irq, struct irq_desc *desc)
 	struct irq_chip *chip = irq_desc_get_chip(desc);
 	struct irq_data *d = irq_desc_get_irq_data(desc);
 	struct dwc3_keystone *kdwc = d->handler_data;
-	int virq;
+	int virq, dwcirq = 0;
 
 	chained_irq_enter(chip, desc);
-	if (kdwc3_irq_pending(kdwc, 0)) {
-		virq = irq_linear_revmap(kdwc->domain, 0);
-		dev_dbg(kdwc->dev, "irq: dispatching %d\n", virq);
-		generic_handle_irq(virq);
-	}
+	virq = irq_linear_revmap(kdwc->domain, dwcirq);
+	dev_vdbg(kdwc->dev, "irq: dispatching virq %d\n", virq);
+	generic_handle_irq(virq);
+	writel(BIT(dwcirq), &kdwc->usbss->irq_eoi);
 	chained_irq_exit(chip, desc);
 }
 
 static struct irq_chip kdwc3_irq_chip = {
-	.name		= "CP_INTD",
+	.name		= "DWC3",
 	.irq_ack	= kdwc3_irq_ack,
 	.irq_mask	= kdwc3_irq_mask,
 	.irq_unmask	= kdwc3_irq_unmask,
 };
 
+static void kdwc3_irq_exit(struct dwc3_keystone *kdwc)
+{
+	struct device *dev = kdwc->dev;
+	struct platform_device *pdev = to_platform_device(dev);
+	int i, irq;
+
+	for (i = 0; i < 256; i++) {
+		irq = platform_get_irq(pdev, i);
+		if (irq <= 0)
+			break;
+		irq_set_handler_data(irq, NULL);
+		irq_set_chained_handler(irq, NULL);
+		dev_info(kdwc->dev, "unmapped irq %d\n", irq);
+	}
+
+	if (kdwc->virq >= 0) {
+		irq_dispose_mapping(kdwc->virq);
+		kdwc->virq = -1;
+	}
+
+	if (kdwc->domain) {
+		irq_domain_remove(kdwc->domain);
+		kdwc->domain = NULL;
+	}
+}
+
 static int __devinit kdwc3_irq_init(struct dwc3_keystone *kdwc)
 {
+	struct device *dev = kdwc->dev;
+	struct platform_device *pdev = to_platform_device(dev);
+	int i, irq;
+
 	kdwc->domain = irq_domain_add_linear(kdwc->dev->of_node, 1,
 					     &irq_domain_simple_ops, kdwc);
 	kdwc->virq = irq_create_mapping(kdwc->domain, 0);
-	irq_set_chip_and_handler(kdwc->virq, &kdwc3_irq_chip, handle_edge_irq);
+	irq_set_chip_and_handler(kdwc->virq, &kdwc3_irq_chip, handle_level_irq);
 	irq_set_chip_data(kdwc->virq, kdwc);
 	set_irq_flags(kdwc->virq, IRQF_VALID);
 
-	irq_set_handler_data(kdwc->hwirq, kdwc);
-	irq_set_chained_handler(kdwc->hwirq, kdwc3_irq_handler);
+	for (i = 0; i < 256; i++) {
+		irq = platform_get_irq(pdev, i);
+		if (irq <= 0)
+			break;
+		irq_set_handler_data(irq, kdwc);
+		irq_set_chained_handler(irq, kdwc3_irq_handler);
+		dev_info(kdwc->dev, "mapped irq %d to virq %d\n", irq,
+			 kdwc->virq);
+	}
 
-	dev_info(kdwc->dev, "mapped hwirq %d to virq %d\n", kdwc->hwirq,
-		 kdwc->virq);
+	if (!i)
+		kdwc3_irq_exit(kdwc);
 
-	return 0;
-}
-
-static void kdwc3_irq_exit(struct dwc3_keystone *kdwc)
-{
-	irq_dispose_mapping(kdwc->virq);
-	irq_domain_remove(kdwc->domain);
-	kdwc->virq = -1;
-	kdwc->domain = NULL;
+	return i ? 0 : -ENODEV;
 }
 
 static int __devinit kdwc3_dev_init(struct dwc3_keystone *kdwc)
@@ -407,12 +397,6 @@ static int __devinit kdwc3_probe(struct platform_device *pdev)
 	dev_dbg(dev, "phy control start=%08x size=%d mapped=%08x\n",
 		(u32)(res->start), (int)resource_size(res),
 		(u32)(kdwc->phy));
-
-	kdwc->hwirq = platform_get_irq(pdev, 0);
-	if (kdwc->hwirq < 0) {
-		dev_err(dev, "no usb irq specified\n");
-		return -ENODEV;
-	}
 
 	/* Initialize usb phy */
 	error = kdwc3_phy_init(kdwc);
