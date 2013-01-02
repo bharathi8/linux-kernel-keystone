@@ -345,7 +345,7 @@ static int dwc3_ep0_handle_status(struct dwc3 *dwc,
 		usb_status |= dwc->is_selfpowered << USB_DEVICE_SELF_POWERED;
 
 		if (dwc->speed == DWC3_DSTS_SUPERSPEED) {
-			reg = dwc3_readl(dwc->regs, DWC3_DCTL);
+			reg = dwc3_readl(dwc, DWC3_DCTL);
 			if (reg & DWC3_DCTL_INITU1ENA)
 				usb_status |= 1 << USB_DEV_STAT_U1_ENABLED;
 			if (reg & DWC3_DCTL_INITU2ENA)
@@ -414,12 +414,12 @@ static int dwc3_ep0_handle_feature(struct dwc3 *dwc,
 			if (dwc->speed != DWC3_DSTS_SUPERSPEED)
 				return -EINVAL;
 
-			reg = dwc3_readl(dwc->regs, DWC3_DCTL);
+			reg = dwc3_readl(dwc, DWC3_DCTL);
 			if (set)
 				reg |= DWC3_DCTL_INITU1ENA;
 			else
 				reg &= ~DWC3_DCTL_INITU1ENA;
-			dwc3_writel(dwc->regs, DWC3_DCTL, reg);
+			dwc3_writel(dwc, DWC3_DCTL, reg);
 			break;
 
 		case USB_DEVICE_U2_ENABLE:
@@ -428,12 +428,12 @@ static int dwc3_ep0_handle_feature(struct dwc3 *dwc,
 			if (dwc->speed != DWC3_DSTS_SUPERSPEED)
 				return -EINVAL;
 
-			reg = dwc3_readl(dwc->regs, DWC3_DCTL);
+			reg = dwc3_readl(dwc, DWC3_DCTL);
 			if (set)
 				reg |= DWC3_DCTL_INITU2ENA;
 			else
 				reg &= ~DWC3_DCTL_INITU2ENA;
-			dwc3_writel(dwc->regs, DWC3_DCTL, reg);
+			dwc3_writel(dwc, DWC3_DCTL, reg);
 			break;
 
 		case USB_DEVICE_LTM_ENABLE:
@@ -507,10 +507,10 @@ static int dwc3_ep0_set_address(struct dwc3 *dwc, struct usb_ctrlrequest *ctrl)
 		return -EINVAL;
 	}
 
-	reg = dwc3_readl(dwc->regs, DWC3_DCFG);
+	reg = dwc3_readl(dwc, DWC3_DCFG);
 	reg &= ~(DWC3_DCFG_DEVADDR_MASK);
 	reg |= DWC3_DCFG_DEVADDR(addr);
-	dwc3_writel(dwc->regs, DWC3_DCFG, reg);
+	dwc3_writel(dwc, DWC3_DCFG, reg);
 
 	if (addr)
 		dwc->dev_state = DWC3_ADDRESS_STATE;
@@ -553,9 +553,9 @@ static int dwc3_ep0_set_config(struct dwc3 *dwc, struct usb_ctrlrequest *ctrl)
 			 * Enable transition to U1/U2 state when
 			 * nothing is pending from application.
 			 */
-			reg = dwc3_readl(dwc->regs, DWC3_DCTL);
+			reg = dwc3_readl(dwc, DWC3_DCTL);
 			reg |= (DWC3_DCTL_ACCEPTU1ENA | DWC3_DCTL_ACCEPTU2ENA);
-			dwc3_writel(dwc->regs, DWC3_DCTL, reg);
+			dwc3_writel(dwc, DWC3_DCTL, reg);
 
 			dwc->resize_fifos = true;
 			dev_dbg(dwc->dev, "resize fifos flag SET\n");
@@ -597,7 +597,7 @@ static void dwc3_ep0_set_sel_cmpl(struct usb_ep *ep, struct usb_request *req)
 	dwc->u2sel = le16_to_cpu(timing.u2sel);
 	dwc->u2pel = le16_to_cpu(timing.u2pel);
 
-	reg = dwc3_readl(dwc->regs, DWC3_DCTL);
+	reg = dwc3_readl(dwc, DWC3_DCTL);
 	if (reg & DWC3_DCTL_INITU2ENA)
 		param = dwc->u2pel;
 	if (reg & DWC3_DCTL_INITU1ENA)
