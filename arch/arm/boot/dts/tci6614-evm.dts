@@ -279,6 +279,7 @@
 				clocks = <&refclk>;
 				reg = <0x02310110 4	/* PLLCTRL PLLM */
 					0x02620328 4>;	/* MAINPLL_CTL0 */
+				pll_has_pllctrl;
 				pllm_lower_mask	= <0x3f>;
 				pllm_upper_mask = <0x7f000>;
 				pllm_upper_shift = <6>;
