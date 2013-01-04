@@ -155,7 +155,9 @@ static int rproc_virtio_find_vqs(struct virtio_device *vdev, unsigned nvqs,
 		       vq_callback_t *callbacks[],
 		       const char *names[])
 {
+#if 0
 	struct rproc *rproc = vdev_to_rproc(vdev);
+#endif
 	int i, ret;
 
 	for (i = 0; i < nvqs; ++i) {
@@ -166,13 +168,14 @@ static int rproc_virtio_find_vqs(struct virtio_device *vdev, unsigned nvqs,
 		}
 	}
 
+#if 0
 	/* now that the vqs are all set, boot the remote processor */
 	ret = rproc_boot(rproc);
 	if (ret) {
 		dev_err(&rproc->dev, "rproc_boot() failed %d\n", ret);
 		goto error;
 	}
-
+#endif
 	return 0;
 
 error:
