@@ -28,5 +28,7 @@ enum rproc_user_state {
 				      void *)
 #define RPROC_USER_IOC_SET_STATE _IOW(RPROC_USER_IOC_MAGIC, 1,	\
 				      enum rproc_user_state)
+#define RPROC_USER_IOC_SET_VRING_ADDR _IOW(RPROC_USER_IOC_MAGIC, 2,	\
+				      unsigned int)
 
 #endif /* _LINUX_REMOTEPROC_USER_H */
