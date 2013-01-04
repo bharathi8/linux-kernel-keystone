@@ -1552,25 +1552,27 @@
 		dsp0 {
 			compatible = "linux,rproc-user";
 			reg = <0x02620040 4
+			       0x0235085c 4
 			       0x02350a5c 4
 			       0x02620240 4
 			       0x10800000 0x00100000>;
-			reg-names = "boot-address", "psc-mdctl", "ipcgr", "l2ram";
+			reg-names = "boot-address", "psc-mdstat", "psc-mdctl", "ipcgr", "l2ram";
 			interrupt-parent = <&ipcirq>;
-			interrupts = <0 0 4 0>;
-			kick-gpio = <&ipcgpio0 0 0>;
+			interrupts = <4 0 0 0>;
+			kick-gpio = <&ipcgpio0 27 0>;
 			clocks = <&clkgem0>;
 		};
 
 		dsp1 {
 			compatible = "linux,rproc-user";
 			reg = <0x02620044 4
+			       0x02350860 4
 			       0x02350a60 4
 			       0x02620244 4
 			       0x20800000 0x00100000>;
-			reg-names = "boot-address", "psc-mdctl", "ipcgr", "l2ram";
-			interrupts = <1 0 5 0>;
-			kick-gpio = <&ipcgpio1 0 0>;
+			reg-names = "boot-address", "psc-mdstat", "psc-mdctl", "ipcgr", "l2ram";
+			interrupts = <5 0 1 0>;
+			kick-gpio = <&ipcgpio1 27 0>;
 			clocks = <&clkgem1>;
 		};
 
@@ -1580,9 +1582,9 @@
 			       0x02350a68 4
 			       0x02620248 4
 			       0x30800000 0x00100000>;
-			reg-names = "boot-address", "psc-mdctl", "ipcgr", "l2ram";
-			interrupts = <2 0 6 0>;
-			kick-gpio = <&ipcgpio2 0 0>;
+			reg-names = "boot-address", "psc-mdstat", "psc-mdctl", "ipcgr", "l2ram";
+			interrupts = <6 0 2 0>;
+			kick-gpio = <&ipcgpio2 27 0>;
 			clocks = <&clkgem2>;
 		};
 
@@ -1592,9 +1594,9 @@
 			       0x02350a70 4
 			       0x0262024c 4
 			       0x40800000 0x00100000>;
-			reg-names = "boot-address", "psc-mdctl", "ipcgr", "l2ram";
-			interrupts = <3 0 7 0>;
-			kick-gpio = <&ipcgpio3 0 0>;
+			reg-names = "boot-address", "psc-mdstat", "psc-mdctl", "ipcgr", "l2ram";
+			interrupts = <7 0 3 0>;
+			kick-gpio = <&ipcgpio3 27 0>;
 			clocks = <&clkgem3>;
 		};
 
