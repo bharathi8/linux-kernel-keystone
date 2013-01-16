@@ -1527,7 +1527,7 @@
 			};
 			sa: pa@20c0000 {
 				label = "keystone-sa";
-
+				tx-channel = "satx";
 				tx_queue_depth = <32>;
 			};
 		};
