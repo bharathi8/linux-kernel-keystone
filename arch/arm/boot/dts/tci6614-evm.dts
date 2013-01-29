@@ -1275,9 +1275,9 @@
 			qm-base-address = <0x34020000 0x34030000>;
 
 			channels {
-				nettx {
+				nettx0 {
 					transmit;
-					label		= "nettx";
+					label		= "nettx0";
 					pool		= "pool-net";
 					submit-queue	= <648>;
 					/* complete-queue = <xx>; */
@@ -1285,12 +1285,32 @@
 					/* channel = <0>; */
 					/* priority = <1>; */
 				};
-				netrx {
+				nettx1 {
+					transmit;
+					label		= "nettx1";
+					pool		= "pool-net";
+					submit-queue	= <648>;
+					/* complete-queue = <xx>; */
+					/* debug; */
+					/* channel = <0>; */
+					/* priority = <1>; */
+				};
+				netrx0 {
 					receive;
-					label		= "netrx";
+					label		= "netrx0";
 					pool		= "pool-net";
 					/* submit-queue   = <xx>; */
 					complete-queue = <650>;
+					/* debug; */
+					/* channel = <0>; */
+					flow		= <22>;
+				};
+				netrx1 {
+					receive;
+					label		= "netrx1";
+					pool		= "pool-net";
+					/* submit-queue   = <xx>; */
+					complete-queue = <651>;
 					/* debug; */
 					/* channel = <0>; */
 					flow		= <23>;
@@ -1301,9 +1321,9 @@
 					pool		= "pool-net";
 					submit-queue	= <646>;
 				};
-				patx-cmd {
+				patx-pdsp0 {
 					transmit;
-					label		= "patx-cmd";
+					label		= "patx-pdsp0";
 					pool		= "pool-net";
 					submit-queue	= <640>;
 					/* complete-queue = <xx>; */
@@ -1311,9 +1331,29 @@
 					/* channel = <xx>; */
 					/* priority = <1>; */
 				};
-				patx-dat {
+				patx-pdsp5-0 {
 					transmit;
-					label		= "patx-dat";
+					label		= "patx-pdsp5-0";
+					pool		= "pool-net";
+					submit-queue	= <645>;
+					/* complete-queue = <xx>; */
+					/* debug; */
+					/* channel = <xx>; */
+					/* priority = <1>; */
+				};
+				patx-pdsp5-1 {
+					transmit;
+					label		= "patx-pdsp5-1";
+					pool		= "pool-net";
+					submit-queue	= <645>;
+					/* complete-queue = <xx>; */
+					/* debug; */
+					/* channel = <xx>; */
+					/* priority = <1>; */
+				};
+				patx-pdsp5-2 {
+					transmit;
+					label		= "patx-pdsp5-2";
 					pool		= "pool-net";
 					submit-queue	= <645>;
 					/* complete-queue = <xx>; */
@@ -1444,20 +1484,29 @@
 				0x2620110 0x8>;
 			compatible = "ti,keystone-netcp";
 
-			rx-channel = "netrx";
-			rx-queue-depth = <128 128 0 0>;
-			rx-buffer-size = <1500 4096 0 0>;
-
-			efuse-mac = <1>;
-			local-mac-address = [00 18 31 7e 3e 6e];
 			clocks = <&clkpktproc>, <&clkethss>;
 			clock-names = "clk_pa", "clk_cpgmac";
+
+			interfaces {
+				interface-0 {
+					rx-channel = "netrx0";
+					rx-queue-depth = <128 128 0 0>;
+					rx-buffer-size = <1500 4096 0 0>;
+					efuse-mac = <1>;
+					local-mac-address = [02 18 31 7e 3e 6e];
+				};
+				interface-1 {
+					rx-channel = "netrx1";
+					rx-queue-depth = <128 128 0 0>;
+					rx-buffer-size = <1500 4096 0 0>;
+					efuse-mac = <0>;
+					local-mac-address = [02 18 31 7e 3e 6f];
+				};
+			};
 
 			cpsw: cpsw@2090000 {
 				label = "keystone-cpsw";
 
-				tx-channel = "nettx";
-				tx_queue_depth = <32>;
 				intf_tx_queues = <6>;
 
 				sgmii_module_ofs  = <0x100>;
@@ -1472,6 +1521,25 @@
 				ale_ageout  = <10>;
 				ale_entries = <1024>;
 				ale_ports   = <3>;
+
+				multi-interface;
+				num-interfaces = <2>;
+				slaves-per-interface = <1>;
+
+				interfaces {
+					interface-0 {
+						slave_port = <0>;
+						tx-channel = "nettx0";
+						tx_queue_depth = <32>;
+						intf_tx_queues = <6>;
+					};
+					interface-1 {
+						slave_port = <1>;
+						tx-channel = "nettx1";
+						tx_queue_depth = <32>;
+						intf_tx_queues = <6>;
+					};
+				};
 
 				slaves {
 					slave0 {
@@ -1495,9 +1563,14 @@
 				tx_data_queue_depth	= <32>;
 				rx_pool_depth		= <32>;
 				rx_buffer_size		= <128>;
+				lut-ranges		= < 0 47 60 63>;
 			};
 			qos: qos@0 {
 				label = "keystone-qos";
+
+				multi-interface;
+				interface-1;
+
 				input-channels {
 					chan-0 {
 						tx-channel = "qos0";
@@ -1527,6 +1600,10 @@
 			};
 			sa: pa@20c0000 {
 				label = "keystone-sa";
+
+				multi-interface;
+				interface-1;
+
 				tx-channel = "satx";
 				tx_queue_depth = <32>;
 			};
