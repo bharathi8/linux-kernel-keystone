@@ -1303,7 +1303,7 @@
 					complete-queue = <650>;
 					/* debug; */
 					/* channel = <0>; */
-					flow		= <22>;
+					flow		= <23>;
 				};
 				netrx1 {
 					receive;
@@ -1313,7 +1313,7 @@
 					complete-queue = <651>;
 					/* debug; */
 					/* channel = <0>; */
-					flow		= <23>;
+					flow		= <22>;
 				};
 				satx {
 					transmit;
@@ -1344,16 +1344,6 @@
 				patx-pdsp5-1 {
 					transmit;
 					label		= "patx-pdsp5-1";
-					pool		= "pool-net";
-					submit-queue	= <645>;
-					/* complete-queue = <xx>; */
-					/* debug; */
-					/* channel = <xx>; */
-					/* priority = <1>; */
-				};
-				patx-pdsp5-2 {
-					transmit;
-					label		= "patx-pdsp5-2";
 					pool		= "pool-net";
 					submit-queue	= <645>;
 					/* complete-queue = <xx>; */
@@ -1495,13 +1485,6 @@
 					efuse-mac = <1>;
 					local-mac-address = [02 18 31 7e 3e 6e];
 				};
-				interface-1 {
-					rx-channel = "netrx1";
-					rx-queue-depth = <128 128 0 0>;
-					rx-buffer-size = <1500 4096 0 0>;
-					efuse-mac = <0>;
-					local-mac-address = [02 18 31 7e 3e 6f];
-				};
 			};
 
 			cpsw: cpsw@2090000 {
@@ -1522,20 +1505,14 @@
 				ale_entries = <1024>;
 				ale_ports   = <3>;
 
-				multi-interface;
-				num-interfaces = <2>;
-				slaves-per-interface = <1>;
+				/* multi-interface; */
+				num-interfaces = <1>;
+				slaves-per-interface = <2>;
 
 				interfaces {
 					interface-0 {
 						slave_port = <0>;
 						tx-channel = "nettx0";
-						tx_queue_depth = <32>;
-						intf_tx_queues = <6>;
-					};
-					interface-1 {
-						slave_port = <1>;
-						tx-channel = "nettx1";
 						tx_queue_depth = <32>;
 						intf_tx_queues = <6>;
 					};
@@ -1568,8 +1545,8 @@
 			qos: qos@0 {
 				label = "keystone-qos";
 
-				multi-interface;
-				interface-1;
+				/* multi-interface; */
+				interface-0;
 
 				input-channels {
 					chan-0 {
@@ -1601,8 +1578,8 @@
 			sa: pa@20c0000 {
 				label = "keystone-sa";
 
-				multi-interface;
-				interface-1;
+				/* multi-interface; */
+				interface-0;
 
 				tx-channel = "satx";
 				tx_queue_depth = <32>;
