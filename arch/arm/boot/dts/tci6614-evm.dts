@@ -1669,6 +1669,7 @@
 				ti,davinci-ecc-mode = "hw";
 				ti,davinci-ecc-bits = <4>;
 				ti,davinci-nand-use-bbt;
+				ti,davinci-no-subpage-write;
 				clocks = <&clkaemif>;
 				clock-names = "aemif";
 
