@@ -359,9 +359,10 @@ struct rproc_ops {
 enum rproc_state {
 	RPROC_OFFLINE	= 0,
 	RPROC_SUSPENDED	= 1,
-	RPROC_RUNNING	= 2,
-	RPROC_CRASHED	= 3,
-	RPROC_LAST	= 4,
+	RPROC_LOADED    = 2,
+	RPROC_RUNNING	= 3,
+	RPROC_CRASHED	= 4,
+	RPROC_LAST	= 5,
 };
 
 /**

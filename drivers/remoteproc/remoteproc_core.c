@@ -845,15 +845,6 @@ static int rproc_fw_boot(struct rproc *rproc, const struct firmware *fw)
 		goto clean_up;
 	}
 
-	if (!fw) {
-		/* handle vdev resources */
-		ret = rproc_handle_virtio_rsc(rproc, table, tablesz);
-		if (ret) {
-			dev_err(dev, "Failed to process resources: %d\n", ret);
-			goto clean_up;
-		}
-	}
-
 	/* handle fw resources which are required to boot rproc */
 	ret = rproc_handle_boot_rsc(rproc, table, tablesz);
 	if (ret) {
@@ -873,6 +864,17 @@ static int rproc_fw_boot(struct rproc *rproc, const struct firmware *fw)
 	if (ret) {
 		dev_err(dev, "can't start rproc %s: %d\n", rproc->name, ret);
 		goto clean_up;
+	}
+	/* Set state to indicate RPROC is loaded */
+	rproc->state = RPROC_LOADED;
+
+	if (!fw) {
+		/* handle vdev resources */
+		ret = rproc_handle_virtio_rsc(rproc, table, tablesz);
+		if (ret) {
+			dev_err(dev, "Failed to process resources: %d\n", ret);
+			goto clean_up;
+		}
 	}
 
 	rproc->state = RPROC_RUNNING;
@@ -1032,7 +1034,11 @@ int rproc_boot(struct rproc *rproc)
 		pr_err("invalid rproc handle\n");
 		return -EINVAL;
 	}
-
+	/* Return out if loaded or running */
+	if((rproc->state == RPROC_LOADED) || (rproc->state == RPROC_RUNNING)) {
+		/* rproc is already loaded return */
+		return 0;
+	}
 	dev = &rproc->dev;
 
 	ret = mutex_lock_interruptible(&rproc->lock);
