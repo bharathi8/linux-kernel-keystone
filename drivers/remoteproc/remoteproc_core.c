@@ -39,6 +39,8 @@
 #include <linux/elf.h>
 #include <linux/virtio_ids.h>
 #include <linux/virtio_ring.h>
+#include <linux/io.h>
+
 #include <asm/byteorder.h>
 
 #include "remoteproc_internal.h"
@@ -585,12 +587,25 @@ static int rproc_handle_carveout(struct rproc *rproc,
 		dev_err(dev, "kzalloc carveout failed\n");
 		return -ENOMEM;
 	}
-
-	va = dma_alloc_coherent(dev->parent, rsc->len, &dma, GFP_KERNEL);
-	if (!va) {
-		dev_err(dev->parent, "dma_alloc_coherent err: %d\n", rsc->len);
-		ret = -ENOMEM;
-		goto free_carv;
+	if (rproc->domain) {
+		va = dma_alloc_coherent(dev->parent, rsc->len, &dma,
+						GFP_KERNEL);
+		if (!va) {
+			dev_err(dev->parent,
+				"dma_alloc_coherent err: %d\n", rsc->len);
+			ret = -ENOMEM;
+			goto free_carv;
+		}
+	} else {
+		dma = rsc->pa;
+		/* Convert to virtual address */
+		va  = devm_ioremap_nocache(&rproc->dev, dma, rsc->len);
+		if (!va) {
+			dev_err(dev->parent, "devm_ioremap_nocache err: %d\n",
+				rsc->len);
+			ret = -ENOMEM;
+			goto free_carv;
+		}
 	}
 
 	dev_dbg(dev, "carveout va %p, dma %llx, len 0x%x\n", va,
@@ -786,7 +801,11 @@ static void rproc_resource_cleanup(struct rproc *rproc)
 
 	/* clean up carveout allocations */
 	list_for_each_entry_safe(entry, tmp, &rproc->carveouts, node) {
-		dma_free_coherent(dev->parent, entry->len, entry->va, entry->dma);
+		if (rproc->domain)
+			dma_free_coherent(dev->parent, entry->len, entry->va,
+					 entry->dma);
+		else
+			devm_iounmap(&rproc->dev, entry->va);
 		list_del(&entry->node);
 		kfree(entry);
 	}
