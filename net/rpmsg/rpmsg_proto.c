@@ -15,8 +15,6 @@
  * GNU General Public License for more details.
  */
 
-#define DEBUG
-
 #define pr_fmt(fmt)    "%s: " fmt, __func__
 
 #include <linux/kernel.h>
@@ -505,14 +503,10 @@ static int rpmsg_proto_probe(struct rpmsg_channel *rpdev)
 	int ret, dst = rpdev->dst, src = rpdev->src, id;
 	struct radix_tree_root *vrp_channels;
 
-	pr_debug("Probe called %d\n", dst);
-	dump_stack();
 	if (dst == RPMSG_ADDR_ANY)
 		return 0;
 
 	id = get_virtproc_id(rpdev->vrp);
-
-	pr_debug("Probe called 1 %d\n", id);
 
 	mutex_lock(&rpmsg_channels_lock);
 
@@ -612,8 +606,6 @@ int __init rpmsg_proto_init(void)
 		pr_err("register_rpmsg_driver failed: %d\n", ret);
 		goto sock_unreg;
 	}
-
-	pr_info("registered rpmsg network protocol\n");
 
 	return 0;
 

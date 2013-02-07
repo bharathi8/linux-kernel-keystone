@@ -124,6 +124,15 @@ struct rpmsg_channel_info {
 /* Address 53 is reserved for advertising remote services */
 #define RPMSG_NS_ADDR			(53)
 
+#ifdef DEBUG_VERBOSE
+#define rpmsg_print_hex_dump(msg, a, b, c, d, e, f, g) \
+{ \
+	print_hex_dump(KERN_DEBUG, a, b, c, d, e, f, g); \
+}
+#else
+#define rpmsg_print_hex_dump(msg, a, b, c, d, e, f, g) {}
+#endif
+
 /* sysfs show configuration fields */
 #define rpmsg_show_attr(field, path, format_string)			\
 static ssize_t								\
@@ -773,8 +782,9 @@ int rpmsg_send_offchannel_raw(struct rpmsg_channel *rpdev, u32 src, u32 dst,
 	dev_dbg(dev, "TX From 0x%x, To 0x%x, Len %d, Flags %d, Reserved %d\n",
 					msg->src, msg->dst, msg->len,
 					msg->flags, msg->reserved);
-	print_hex_dump(KERN_DEBUG, "rpmsg_virtio TX: ", DUMP_PREFIX_NONE, 16, 1,
-					msg, sizeof(*msg) + msg->len, true);
+
+	rpmsg_print_hex_dump(KERN_DEBUG, "rpmsg_virtio TX: ", DUMP_PREFIX_NONE,
+				 16, 1, msg, sizeof(*msg) + msg->len, true);
 
 	sg_init_one(&sg, msg, sizeof(*msg) + len);
 
@@ -820,9 +830,9 @@ static void rpmsg_recv_done(struct virtqueue *rvq)
 	dev_dbg(dev, "From: 0x%x, To: 0x%x, Len: %d, Flags: %d, Reserved: %d\n",
 					msg->src, msg->dst, msg->len,
 					msg->flags, msg->reserved);
-	print_hex_dump(KERN_DEBUG, "rpmsg_virtio RX: ", DUMP_PREFIX_NONE, 16, 1,
-					msg, sizeof(*msg) + msg->len, true);
 
+	rpmsg_print_hex_dump(KERN_DEBUG, "rpmsg_virtio RX: ", DUMP_PREFIX_NONE,
+				 16, 1, msg, sizeof(*msg) + msg->len, true);
 	/*
 	 * We currently use fixed-sized buffers, so trivially sanitize
 	 * the reported payload length.
@@ -920,9 +930,8 @@ static void rpmsg_ns_cb(struct rpmsg_channel *rpdev, void *data, int len,
 	struct device *dev = &vrp->vdev->dev;
 	int ret;
 
-	print_hex_dump(KERN_DEBUG, "NS announcement: ",
-			DUMP_PREFIX_NONE, 16, 1,
-			data, len, true);
+	rpmsg_print_hex_dump(KERN_DEBUG, "NS announcement: ", DUMP_PREFIX_NONE,
+				 16, 1, data, len, true);
 
 	if (len != sizeof(*msg)) {
 		dev_err(dev, "malformed ns msg (%d)\n", len);
@@ -1041,7 +1050,6 @@ static int rpmsg_probe(struct virtio_device *vdev)
 
 	/* if supported by the remote processor, enable the name service */
 	if (virtio_has_feature(vdev, VIRTIO_RPMSG_F_NS)) {
-		dev_info(&vdev->dev, "Name service feature supported\n");
 		/* a dedicated endpoint handles the name service msgs */
 		vrp->ns_ept = __rpmsg_create_ept(vrp, NULL, rpmsg_ns_cb,
 						vrp, RPMSG_NS_ADDR);
