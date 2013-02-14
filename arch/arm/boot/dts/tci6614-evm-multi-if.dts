@@ -945,7 +945,7 @@
 				tx_data_queue_depth	= <32>;
 				rx_pool_depth		= <32>;
 				rx_buffer_size		= <128>;
-				lut-ranges		= < 0 47 60 63>;
+				lut-ranges		= < 0 43 56 63>;
 			};
 			qos: qos@0 {
 				label = "keystone-qos";
