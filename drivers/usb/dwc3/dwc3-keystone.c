@@ -281,7 +281,7 @@ static int __devinit kdwc3_dev_init(struct dwc3_keystone *kdwc)
 		.name		= "dwc3",
 		.res		= resources,
 		.num_res	= ARRAY_SIZE(resources),
-		.dma_mask	= *dev->dma_mask,
+		.dma_mask	= dma_get_mask(dev),
 	};
 
 	info.id = dwc3_get_device_id();
