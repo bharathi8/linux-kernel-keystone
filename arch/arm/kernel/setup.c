@@ -153,7 +153,7 @@ DEFINE_PER_CPU(struct cpuinfo_arm, cpu_data);
 unsigned long __pv_offset = 0xdeadbeef;
 phys_addr_t   __pv_phys_offset = 0xdeadbeef;
 EXPORT_SYMBOL(__pv_phys_offset);
-
+EXPORT_SYMBOL(__pv_offset);
 #endif
 
 /*
