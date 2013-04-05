@@ -99,7 +99,7 @@ struct dwc3_keystone {
 	struct kdwc3_irq_regs __iomem	*usbss;
 };
 
-static int __devinit kdwc3_phy_init(struct dwc3_keystone *kdwc)
+static int kdwc3_phy_init(struct dwc3_keystone *kdwc)
 {
 	int error;
 	u32 val;
@@ -242,7 +242,7 @@ static void kdwc3_irq_exit(struct dwc3_keystone *kdwc)
 	}
 }
 
-static int __devinit kdwc3_irq_init(struct dwc3_keystone *kdwc)
+static int kdwc3_irq_init(struct dwc3_keystone *kdwc)
 {
 	struct device *dev = kdwc->dev;
 	struct platform_device *pdev = to_platform_device(dev);
@@ -271,7 +271,7 @@ static int __devinit kdwc3_irq_init(struct dwc3_keystone *kdwc)
 	return i ? 0 : -ENODEV;
 }
 
-static int __devinit kdwc3_dev_init(struct dwc3_keystone *kdwc)
+static int kdwc3_dev_init(struct dwc3_keystone *kdwc)
 {
 	struct device *dev = kdwc->dev;
 	struct platform_device *pdev = to_platform_device(dev), *dwc;
@@ -326,7 +326,7 @@ static int __devinit kdwc3_dev_init(struct dwc3_keystone *kdwc)
 	return 0;
 }
 
-static int __devinit kdwc3_probe(struct platform_device *pdev)
+static int kdwc3_probe(struct platform_device *pdev)
 {
 	struct device *dev = &pdev->dev;
 	struct dwc3_keystone *kdwc;
@@ -421,7 +421,7 @@ static int __devinit kdwc3_probe(struct platform_device *pdev)
 	return 0;
 }
 
-static int __devexit kdwc3_remove(struct platform_device *pdev)
+static int kdwc3_remove(struct platform_device *pdev)
 {
 	struct dwc3_keystone *kdwc = platform_get_drvdata(pdev);
 
@@ -442,7 +442,7 @@ MODULE_DEVICE_TABLE(of, kdwc3_of_match);
 
 static struct platform_driver kdwc3_driver = {
 	.probe		= kdwc3_probe,
-	.remove		= __devexit_p(kdwc3_remove),
+	.remove		= kdwc3_remove,
 	.driver		= {
 		.name	= "keystone-dwc3",
 		.owner	        = THIS_MODULE,
