@@ -141,9 +141,7 @@ static void kdwc3_phy_exit(struct dwc3_keystone *kdwc)
 static void kdwc3_dev_exit(struct dwc3_keystone *kdwc)
 {
 	if (kdwc && kdwc->dwc) {
-		int id = kdwc->dwc->id;
 		platform_device_unregister(kdwc->dwc);
-		dwc3_put_device_id(id);
 		kdwc->dwc = NULL;
 	}
 }
@@ -284,16 +282,9 @@ static int kdwc3_dev_init(struct dwc3_keystone *kdwc)
 		.dma_mask	= dma_get_mask(dev),
 	};
 
-	info.id = dwc3_get_device_id();
-	if (info.id < 0) {
-		dev_err(dev, "failed to get dwc device id\n");
-		return info.id;
-	}
-
 	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
 	if (!res) {
 		dev_err(dev, "failed to find xhci resource\n");
-		dwc3_put_device_id(info.id);
 		return -ENODEV;
 	}
 	
@@ -310,14 +301,13 @@ static int kdwc3_dev_init(struct dwc3_keystone *kdwc)
 	resources[1].flags = IORESOURCE_IRQ;
 
 	dev_dbg(dev, "registering %s.%d, irq=%d, mem=%08lx-%08lx\n",
-		info.name, info.id, (int)resources[1].start,
+		info.name, 0 , (int)resources[1].start,
 		(unsigned long)resources[0].start,
 		(unsigned long)resources[0].end);
 
 	dwc = platform_device_register_full(&info);
 	if (IS_ERR(dwc)) {
 		dev_err(dev, "failed to register dwc device\n");
-		dwc3_put_device_id(info.id);
 		return PTR_ERR(dwc);
 	}
 
