@@ -24,7 +24,11 @@
 #include <linux/list.h>
 #include <linux/errno.h>
 #include <linux/skbuff.h>
-#include <linux/rwlock.h>
+#ifdef CONFIG_PREEMPT_RT_FULL
+# include <linux/rwlock_rt.h>
+#else
+# include <linux/rwlock.h>
+#endif
 #include <linux/err.h>
 #include <linux/mutex.h>
 #include <linux/rpmsg.h>
