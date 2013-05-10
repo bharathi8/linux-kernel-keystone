@@ -48,7 +48,8 @@
 #include <linux/irqdomain.h>
 #include <linux/io.h>
 #include <linux/irq.h>
-#include <linux/module.h>
+#include <linux/usb/otg.h>
+#include <linux/usb/nop-usb-xceiv.h>
 
 #include "core.h"
 #include "io.h"
@@ -85,6 +86,8 @@ struct kdwc3_irq_regs {
 struct dwc3_keystone {
 	spinlock_t		lock;
 	struct platform_device	*dwc;
+	struct platform_device	*usb2_phy;
+	struct platform_device	*usb3_phy;
 	struct device		*dev;
 	struct clk		*clk;
 	struct irq_domain	*domain;
@@ -316,6 +319,59 @@ static int kdwc3_dev_init(struct dwc3_keystone *kdwc)
 	return 0;
 }
 
+static int dwc3_keystone_register_phys(struct dwc3_keystone *kdwc)
+{
+	struct nop_usb_xceiv_platform_data pdata;
+	struct platform_device	*pdev;
+	int			ret;
+
+	memset(&pdata, 0x00, sizeof(pdata));
+
+	pdev = platform_device_alloc("nop_usb_xceiv", 0);
+	if (!pdev)
+		return -ENOMEM;
+
+	kdwc->usb2_phy = pdev;
+	pdata.type = USB_PHY_TYPE_USB2;
+
+	ret = platform_device_add_data(kdwc->usb2_phy, &pdata, sizeof(pdata));
+	if (ret)
+		goto err1;
+
+	pdev = platform_device_alloc("nop_usb_xceiv", 1);
+	if (!pdev) {
+		ret = -ENOMEM;
+		goto err1;
+	}
+
+	kdwc->usb3_phy = pdev;
+	pdata.type = USB_PHY_TYPE_USB3;
+
+	ret = platform_device_add_data(kdwc->usb3_phy, &pdata, sizeof(pdata));
+	if (ret)
+		goto err2;
+
+	ret = platform_device_add(kdwc->usb2_phy);
+	if (ret)
+		goto err2;
+
+	ret = platform_device_add(kdwc->usb3_phy);
+	if (ret)
+		goto err3;
+
+	return 0;
+
+err3:
+	platform_device_del(kdwc->usb2_phy);
+
+err2:
+	platform_device_put(kdwc->usb3_phy);
+
+err1:
+	platform_device_put(kdwc->usb2_phy);
+
+	return ret;
+}
 static int kdwc3_probe(struct platform_device *pdev)
 {
 	struct device *dev = &pdev->dev;
@@ -387,6 +443,12 @@ static int kdwc3_probe(struct platform_device *pdev)
 	dev_dbg(dev, "phy control start=%08x size=%d mapped=%08x\n",
 		(u32)(res->start), (int)resource_size(res),
 		(u32)(kdwc->phy));
+
+	error = dwc3_keystone_register_phys(kdwc);
+	if (error) {
+		dev_err(dev, "couldn't register PHYs\n");
+		return error;
+	}
 
 	/* Initialize usb phy */
 	error = kdwc3_phy_init(kdwc);
