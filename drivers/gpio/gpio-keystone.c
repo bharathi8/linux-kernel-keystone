@@ -176,7 +176,10 @@ static void keystone_irq_handler(unsigned int irq, struct irq_desc *desc)
 
 	/* temporarily mask (level sensitive) parent IRQ */
 	chip->irq_mask(&desc->irq_data);
-	chip->irq_ack(&desc->irq_data);
+	if (chip->irq_ack)
+		chip->irq_ack(&desc->irq_data);
+	if (chip->irq_eoi)
+		chip->irq_eoi(&desc->irq_data);
 
 	status = __raw_readl(bank->reg_base + regs->intstat) & mask;
 	if (status) {
