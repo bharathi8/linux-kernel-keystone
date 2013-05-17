@@ -322,34 +322,34 @@ static int of_davinci_aemif_parse_abus_config(struct device_node *np)
 	davinci_aemif_get_hw_params(cs - 2, data);
 
 	/* override the values from device node */
-	val = dv_get_value(np, "davinci-cs-ta");
+	val = dv_get_value(np, "ti,davinci-cs-ta");
 	if (val >= 0)
 		data->ta = val;
-	val = dv_get_value(np, "davinci-cs-rhold");
+	val = dv_get_value(np, "ti,davinci-cs-rhold");
 	if (val >= 0)
 		data->rhold	= val;
-	val = dv_get_value(np, "davinci-cs-rstrobe");
+	val = dv_get_value(np, "ti,davinci-cs-rstrobe");
 	if (val >= 0)
 		data->rstrobe = val;
-	val = dv_get_value(np, "davinci-cs-rsetup");
+	val = dv_get_value(np, "ti,davinci-cs-rsetup");
 	if (val >= 0)
 		data->rsetup = val;
-	val = dv_get_value(np, "davinci-cs-whold");
+	val = dv_get_value(np, "ti,davinci-cs-whold");
 	if (val >= 0)
 		data->whold = val;
-	val = dv_get_value(np, "davinci-cs-wstrobe");
+	val = dv_get_value(np, "ti,davinci-cs-wstrobe");
 	if (val >= 0)
 		data->wstrobe = val;
-	val = dv_get_value(np, "davinci-cs-wsetup");
+	val = dv_get_value(np, "ti,davinci-cs-wsetup");
 	if (val >= 0)
 		data->wsetup = val;
-	val = dv_get_value(np, "davinci-cs-asize");
+	val = dv_get_value(np, "ti,davinci-cs-asize");
 	if (val >= 0)
 		data->asize = val;
-	val = dv_get_value(np, "davinci-cs-ew");
+	val = dv_get_value(np, "ti,davinci-cs-ew");
 	if (val >= 0)
 		data->enable_ew	= val;
-	val = dv_get_value(np, "davinci-cs-ss");
+	val = dv_get_value(np, "ti,davinci-cs-ss");
 	if (val >= 0)
 		data->enable_ss	= val;
 	return 0;
