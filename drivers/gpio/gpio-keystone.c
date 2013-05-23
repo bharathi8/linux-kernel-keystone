@@ -164,16 +164,14 @@ static void keystone_irq_handler(unsigned int irq, struct irq_desc *desc)
 	struct gpio_bank *bank = irq_desc_get_handler_data(desc);
 	struct irq_chip *chip = irq_desc_get_chip(desc);
 	struct gpio_regs *regs = bank->regs;
-	u32 mask = 0xffff, status;
+	u32 mask = 1, status;
 	int gpio, virq;
 
 	gpio = keystone_hwirq_to_gpio(bank, irq);
 	if (gpio < 0)
 		return;
 
-	if (gpio >= GPIOS_PER_HW_BANK)
-		mask <<= 16;
-
+	mask <<= gpio;
 	/* temporarily mask (level sensitive) parent IRQ */
 	chip->irq_mask(&desc->irq_data);
 	if (chip->irq_ack)
