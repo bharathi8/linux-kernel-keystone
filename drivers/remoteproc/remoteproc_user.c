@@ -285,7 +285,7 @@ static int uproc_stop(struct rproc *rproc)
 
 	free_irq(uproc->irq_ring, uproc);
 	/* Flush any pending work: */
-	flush_work_sync(&uproc->workqueue);
+	flush_work(&uproc->workqueue);
 
 	return 0;
 }
