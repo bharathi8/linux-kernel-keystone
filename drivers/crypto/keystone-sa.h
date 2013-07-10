@@ -214,6 +214,12 @@ typedef u8 SA_CTX_PE_PKT_TYPE_T;
 	 ((php_e) << 6))
 
 /*
+ * Byte offset of the owner word in SCCTL
+ * in the security context
+ */
+#define SA_CTX_SCCTL_OWNER_OFFSET 0
+
+/*
  * Assumption: CTX size is mutiple of 32
  */
 #define SA_CTX_SIZE_TO_DMA_SIZE(ctx_sz)	\

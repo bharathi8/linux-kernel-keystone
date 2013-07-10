@@ -2015,7 +2015,7 @@ static int sa_init_sc(struct sa_ctx_info *ctx, const u8 *enc_key,
 	php_f = php_e = SA_CTX_DMA_SIZE_64;
 
 	/* SCCTL Owner info: 0=host, 1=CP_ACE */
-	sc_buf[0] = 0;
+	sc_buf[SA_CTX_SCCTL_OWNER_OFFSET] = 0;
 	/* SCCTL F/E control */
 	sc_buf[1] = SA_CTX_SCCTL_MK_DMA_INFO(php_f, eng0_f, eng1_f, php_e);
 	memcpy(&sc_buf[2], &sc_id, 2); /*(optional)
@@ -2045,7 +2045,7 @@ static int sa_init_sc(struct sa_ctx_info *ctx, const u8 *enc_key,
 	}
 
 	/* Set the ownership of context to CP_ACE */
-	sc_buf[0] = 0x80;
+	sc_buf[SA_CTX_SCCTL_OWNER_OFFSET] = 0x80;
 
 	/* swizzle the security context */
 	sa_swiz_128(sc_buf, sc_buf, SA_CTX_MAX_SZ);
@@ -2077,17 +2077,20 @@ static int sa_init_sc(struct sa_ctx_info *ctx, const u8 *enc_key,
 }
 
 /* Tear down the Security Context */
+#define SA_SC_TEAR_RETRIES	5
+#define SA_SC_TEAR_DELAY	20 /* msecs */
 static int sa_tear_sc(struct sa_ctx_info *ctx,
 			struct keystone_crypto_data *pdata)
 {
+	int own_off, cnt = SA_SC_TEAR_RETRIES;
 	struct dma_async_tx_descriptor *desc;
 	struct sa_dma_req_ctx *dma_ctx;
 	struct sa_swinfo swinfo;
 	dma_cookie_t cookie;
 	unsigned long flags;
 	u16 queue_id;
-	u8 flow_id;
 	int ret = 0;
+	u8 flow_id;
 
 	dma_ctx = kmalloc(sizeof(struct sa_dma_req_ctx), 0);
 	if (!dma_ctx)
@@ -2152,6 +2155,22 @@ static int sa_tear_sc(struct sa_ctx_info *ctx,
 		ret = -ENXIO;
 		goto err;
 	}
+
+	/*
+	 * Check that CP_ACE has released the context
+	 * by making sure that the owner bit is 0
+	 */
+	/*
+	 * Security context had been swizzled by 128 bits
+	 * before handing to CP_ACE
+	 */
+	own_off = ((SA_CTX_SCCTL_OWNER_OFFSET/16) * 16)
+		+ (15 - (SA_CTX_SCCTL_OWNER_OFFSET % 16));
+	while (__raw_readb(&ctx->sc[own_off])) {
+		if (!--cnt)
+			return -EAGAIN;
+		msleep_interruptible(SA_SC_TEAR_DELAY);
+	}
 	return 0;
 
 err:
@@ -2184,6 +2203,7 @@ static void sa_free_ctx_info
 	if (sa_tear_sc(ctx, data)) {
 		dev_err(keystone_dev,
 			"Failed to tear down context id(%x)\n", ctx->sc_id);
+		return;
 	}
 
 	bn = ctx->sc_id - data->sc_id_start;
@@ -2284,6 +2304,9 @@ static int sa_init_tfm(struct crypto_tfm *tfm)
 		}
 	}
 
+	dev_dbg(keystone_dev, "%s(0x%p) sc-ids(0x%x(0x%x), 0x%x(0x%x))\n",
+			__func__, tfm, ctx->enc.sc_id, ctx->enc.sc_phys,
+			ctx->dec.sc_id, ctx->dec.sc_phys);
 	return 0;
 }
 
@@ -2311,6 +2334,10 @@ static void sa_exit_tfm(struct crypto_tfm *tfm)
 	struct crypto_alg *alg = tfm->__crt_alg;
 	struct sa_tfm_ctx *ctx = crypto_tfm_ctx(tfm);
 	struct keystone_crypto_data *data = dev_get_drvdata(keystone_dev);
+
+	dev_dbg(keystone_dev, "%s(0x%p) sc-ids(0x%x(0x%x), 0x%x(0x%x))\n",
+			__func__, tfm, ctx->enc.sc_id, ctx->enc.sc_phys,
+			ctx->dec.sc_id, ctx->dec.sc_phys);
 
 	if ((alg->cra_flags & CRYPTO_ALG_TYPE_MASK)
 			== CRYPTO_ALG_TYPE_AEAD) {
@@ -3084,6 +3111,7 @@ static int keystone_crypto_remove(struct platform_device *pdev)
 
 	/* un-register crypto algorithms */
 	sa_unregister_algos(&pdev->dev);
+	dma_pool_destroy(crypto->sc_pool);
 	clk_disable_unprepare(crypto->clk);
 	clk_put(crypto->clk);
 	kfree(crypto);
