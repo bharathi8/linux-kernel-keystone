@@ -1651,7 +1651,7 @@ out:
 u64 scsi_calculate_bounce_limit(struct Scsi_Host *shost)
 {
 	struct device *host_dev;
-	u64 bounce_limit = 0xffffffff;
+	u64 bounce_limit = BLK_BOUNCE_HIGH;
 
 	if (shost->unchecked_isa_dma)
 		return BLK_BOUNCE_ISA;
