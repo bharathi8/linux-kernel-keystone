@@ -1154,7 +1154,7 @@ static int storvsc_device_configure(struct scsi_device *sdevice)
 
 	blk_queue_max_segment_size(sdevice->request_queue, PAGE_SIZE);
 
-	blk_queue_bounce_limit(sdevice->request_queue, BLK_BOUNCE_ANY);
+	blk_queue_bounce_limit(sdevice->request_queue, BLK_BOUNCE_HIGH);
 
 	return 0;
 }
