@@ -62,6 +62,18 @@ struct virtqueue {
 	struct virtqueue_ops *ops;
 };
 
+static inline int virtqueue_add_buf_flags(struct virtqueue *vq,
+		      struct scatterlist sg[],
+		      unsigned int out_num,
+		      unsigned int in_num,
+		      void *data, unsigned flags,
+		      gfp_t gfp)
+{
+	if (vq && vq->ops && vq->ops->add_buf)
+		return vq->ops->add_buf(vq, sg, out_num, in_num, data, gfp);
+	return -ENOTSUPP;
+}
+
 /**
  * virtqueue_add_buf - expose buffer to other end
  * @vq: the struct virtqueue we're talking about.
