@@ -295,21 +295,7 @@ add_head:
 	return 0;
 }
 
-/**
- * virtqueue_add_buf - expose buffer to other end
- * @vq: the struct virtqueue we're talking about.
- * @sg: the description of the buffer(s).
- * @out_num: the number of sg readable by other side
- * @in_num: the number of sg which are writable (after readable ones)
- * @data: the token identifying the buffer.
- * @gfp: how to do memory allocations (if necessary).
- *
- * Caller must ensure we don't call this with other virtqueue operations
- * at the same time (except where noted).
- *
- * Returns zero or a negative error (ie. ENOSPC, ENOMEM).
- */
-int virtqueue_add_buf(struct virtqueue *_vq,
+static int vring_add_buf(struct virtqueue *_vq,
 		      struct scatterlist sg[],
 		      unsigned int out,
 		      unsigned int in,
@@ -324,23 +310,8 @@ int virtqueue_add_buf(struct virtqueue *_vq,
 	return virtqueue_add(_vq, sgs, sg_next_arr,
 			     out, in, out ? 1 : 0, in ? 1 : 0, data, gfp);
 }
-EXPORT_SYMBOL_GPL(virtqueue_add_buf);
 
-/**
- * virtqueue_add_sgs - expose buffers to other end
- * @vq: the struct virtqueue we're talking about.
- * @sgs: array of terminated scatterlists.
- * @out_num: the number of scatterlists readable by other side
- * @in_num: the number of scatterlists which are writable (after readable ones)
- * @data: the token identifying the buffer.
- * @gfp: how to do memory allocations (if necessary).
- *
- * Caller must ensure we don't call this with other virtqueue operations
- * at the same time (except where noted).
- *
- * Returns zero or a negative error (ie. ENOSPC, ENOMEM).
- */
-int virtqueue_add_sgs(struct virtqueue *_vq,
+static int vring_add_sgs(struct virtqueue *_vq,
 		      struct scatterlist *sgs[],
 		      unsigned int out_sgs,
 		      unsigned int in_sgs,
@@ -363,64 +334,24 @@ int virtqueue_add_sgs(struct virtqueue *_vq,
 	return virtqueue_add(_vq, sgs, sg_next_chained,
 			     total_out, total_in, out_sgs, in_sgs, data, gfp);
 }
-EXPORT_SYMBOL_GPL(virtqueue_add_sgs);
 
-/**
- * virtqueue_add_outbuf - expose output buffers to other end
- * @vq: the struct virtqueue we're talking about.
- * @sgs: array of scatterlists (need not be terminated!)
- * @num: the number of scatterlists readable by other side
- * @data: the token identifying the buffer.
- * @gfp: how to do memory allocations (if necessary).
- *
- * Caller must ensure we don't call this with other virtqueue operations
- * at the same time (except where noted).
- *
- * Returns zero or a negative error (ie. ENOSPC, ENOMEM).
- */
-int virtqueue_add_outbuf(struct virtqueue *vq,
+static int vring_add_outbuf(struct virtqueue *vq,
 			 struct scatterlist sg[], unsigned int num,
 			 void *data,
 			 gfp_t gfp)
 {
 	return virtqueue_add(vq, &sg, sg_next_arr, num, 0, 1, 0, data, gfp);
 }
-EXPORT_SYMBOL_GPL(virtqueue_add_outbuf);
 
-/**
- * virtqueue_add_inbuf - expose input buffers to other end
- * @vq: the struct virtqueue we're talking about.
- * @sgs: array of scatterlists (need not be terminated!)
- * @num: the number of scatterlists writable by other side
- * @data: the token identifying the buffer.
- * @gfp: how to do memory allocations (if necessary).
- *
- * Caller must ensure we don't call this with other virtqueue operations
- * at the same time (except where noted).
- *
- * Returns zero or a negative error (ie. ENOSPC, ENOMEM).
- */
-int virtqueue_add_inbuf(struct virtqueue *vq,
+static int vring_add_inbuf(struct virtqueue *vq,
 			struct scatterlist sg[], unsigned int num,
 			void *data,
 			gfp_t gfp)
 {
 	return virtqueue_add(vq, &sg, sg_next_arr, 0, num, 0, 1, data, gfp);
 }
-EXPORT_SYMBOL_GPL(virtqueue_add_inbuf);
 
-/**
- * virtqueue_kick_prepare - first half of split virtqueue_kick call.
- * @vq: the struct virtqueue
- *
- * Instead of virtqueue_kick(), you can do:
- *	if (virtqueue_kick_prepare(vq))
- *		virtqueue_notify(vq);
- *
- * This is sometimes useful because the virtqueue_kick_prepare() needs
- * to be serialized, but the actual virtqueue_notify() call does not.
- */
-bool virtqueue_kick_prepare(struct virtqueue *_vq)
+static bool vring_kick_prepare(struct virtqueue *_vq)
 {
 	struct vring_virtqueue *vq = to_vvq(_vq);
 	u16 new, old;
@@ -452,39 +383,20 @@ bool virtqueue_kick_prepare(struct virtqueue *_vq)
 	END_USE(vq);
 	return needs_kick;
 }
-EXPORT_SYMBOL_GPL(virtqueue_kick_prepare);
 
-/**
- * virtqueue_notify - second half of split virtqueue_kick call.
- * @vq: the struct virtqueue
- *
- * This does not need to be serialized.
- */
-void virtqueue_notify(struct virtqueue *_vq)
+static void vring_notify(struct virtqueue *_vq)
 {
 	struct vring_virtqueue *vq = to_vvq(_vq);
 
 	/* Prod other side to tell it about changes. */
 	vq->notify(_vq);
 }
-EXPORT_SYMBOL_GPL(virtqueue_notify);
 
-/**
- * virtqueue_kick - update after add_buf
- * @vq: the struct virtqueue
- *
- * After one or more virtqueue_add_buf calls, invoke this to kick
- * the other side.
- *
- * Caller must ensure we don't call this with other virtqueue
- * operations at the same time (except where noted).
- */
-void virtqueue_kick(struct virtqueue *vq)
+static void vring_kick(struct virtqueue *vq)
 {
 	if (virtqueue_kick_prepare(vq))
 		virtqueue_notify(vq);
 }
-EXPORT_SYMBOL_GPL(virtqueue_kick);
 
 static void detach_buf(struct vring_virtqueue *vq, unsigned int head)
 {
@@ -516,23 +428,7 @@ static inline bool more_used(const struct vring_virtqueue *vq)
 	return vq->last_used_idx != vq->vring.used->idx;
 }
 
-/**
- * virtqueue_get_buf - get the next used buffer
- * @vq: the struct virtqueue we're talking about.
- * @len: the length written into the buffer
- *
- * If the driver wrote data into the buffer, @len will be set to the
- * amount written.  This means you don't need to clear the buffer
- * beforehand to ensure there's no data leakage in the case of short
- * writes.
- *
- * Caller must ensure we don't call this with other virtqueue
- * operations at the same time (except where noted).
- *
- * Returns NULL if there are no used buffers, or the "data" token
- * handed to virtqueue_add_buf().
- */
-void *virtqueue_get_buf(struct virtqueue *_vq, unsigned int *len)
+static void *vring_get_buf(struct virtqueue *_vq, unsigned int *len)
 {
 	struct vring_virtqueue *vq = to_vvq(_vq);
 	void *ret;
@@ -587,38 +483,15 @@ void *virtqueue_get_buf(struct virtqueue *_vq, unsigned int *len)
 	END_USE(vq);
 	return ret;
 }
-EXPORT_SYMBOL_GPL(virtqueue_get_buf);
 
-/**
- * virtqueue_disable_cb - disable callbacks
- * @vq: the struct virtqueue we're talking about.
- *
- * Note that this is not necessarily synchronous, hence unreliable and only
- * useful as an optimization.
- *
- * Unlike other operations, this need not be serialized.
- */
-void virtqueue_disable_cb(struct virtqueue *_vq)
+static void vring_disable_cb(struct virtqueue *_vq)
 {
 	struct vring_virtqueue *vq = to_vvq(_vq);
 
 	vq->vring.avail->flags |= VRING_AVAIL_F_NO_INTERRUPT;
 }
-EXPORT_SYMBOL_GPL(virtqueue_disable_cb);
 
-/**
- * virtqueue_enable_cb_prepare - restart callbacks after disable_cb
- * @vq: the struct virtqueue we're talking about.
- *
- * This re-enables callbacks; it returns current queue state
- * in an opaque unsigned value. This value should be later tested by
- * virtqueue_poll, to detect a possible race between the driver checking for
- * more work, and enabling callbacks.
- *
- * Caller must ensure we don't call this with other virtqueue
- * operations at the same time (except where noted).
- */
-unsigned virtqueue_enable_cb_prepare(struct virtqueue *_vq)
+static unsigned vring_enable_cb_prepare(struct virtqueue *_vq)
 {
 	struct vring_virtqueue *vq = to_vvq(_vq);
 	u16 last_used_idx;
@@ -635,58 +508,22 @@ unsigned virtqueue_enable_cb_prepare(struct virtqueue *_vq)
 	END_USE(vq);
 	return last_used_idx;
 }
-EXPORT_SYMBOL_GPL(virtqueue_enable_cb_prepare);
 
-/**
- * virtqueue_poll - query pending used buffers
- * @vq: the struct virtqueue we're talking about.
- * @last_used_idx: virtqueue state (from call to virtqueue_enable_cb_prepare).
- *
- * Returns "true" if there are pending used buffers in the queue.
- *
- * This does not need to be serialized.
- */
-bool virtqueue_poll(struct virtqueue *_vq, unsigned last_used_idx)
+static bool vring_poll(struct virtqueue *_vq, unsigned last_used_idx)
 {
 	struct vring_virtqueue *vq = to_vvq(_vq);
 
 	virtio_mb(vq->weak_barriers);
 	return (u16)last_used_idx != vq->vring.used->idx;
 }
-EXPORT_SYMBOL_GPL(virtqueue_poll);
 
-/**
- * virtqueue_enable_cb - restart callbacks after disable_cb.
- * @vq: the struct virtqueue we're talking about.
- *
- * This re-enables callbacks; it returns "false" if there are pending
- * buffers in the queue, to detect a possible race between the driver
- * checking for more work, and enabling callbacks.
- *
- * Caller must ensure we don't call this with other virtqueue
- * operations at the same time (except where noted).
- */
-bool virtqueue_enable_cb(struct virtqueue *_vq)
+static bool vring_enable_cb(struct virtqueue *_vq)
 {
-	unsigned last_used_idx = virtqueue_enable_cb_prepare(_vq);
-	return !virtqueue_poll(_vq, last_used_idx);
+	unsigned last_used_idx = vring_enable_cb_prepare(_vq);
+	return !vring_poll(_vq, last_used_idx);
 }
-EXPORT_SYMBOL_GPL(virtqueue_enable_cb);
 
-/**
- * virtqueue_enable_cb_delayed - restart callbacks after disable_cb.
- * @vq: the struct virtqueue we're talking about.
- *
- * This re-enables callbacks but hints to the other side to delay
- * interrupts until most of the available buffers have been processed;
- * it returns "false" if there are many pending buffers in the queue,
- * to detect a possible race between the driver checking for more work,
- * and enabling callbacks.
- *
- * Caller must ensure we don't call this with other virtqueue
- * operations at the same time (except where noted).
- */
-bool virtqueue_enable_cb_delayed(struct virtqueue *_vq)
+static bool vring_enable_cb_delayed(struct virtqueue *_vq)
 {
 	struct vring_virtqueue *vq = to_vvq(_vq);
 	u16 bufs;
@@ -711,17 +548,8 @@ bool virtqueue_enable_cb_delayed(struct virtqueue *_vq)
 	END_USE(vq);
 	return true;
 }
-EXPORT_SYMBOL_GPL(virtqueue_enable_cb_delayed);
 
-/**
- * virtqueue_detach_unused_buf - detach first unused buffer
- * @vq: the struct virtqueue we're talking about.
- *
- * Returns NULL or the "data" token handed to virtqueue_add_buf().
- * This is not valid on an active queue; it is useful only for device
- * shutdown.
- */
-void *virtqueue_detach_unused_buf(struct virtqueue *_vq)
+static void *vring_detach_unused_buf(struct virtqueue *_vq)
 {
 	struct vring_virtqueue *vq = to_vvq(_vq);
 	unsigned int i;
@@ -745,7 +573,14 @@ void *virtqueue_detach_unused_buf(struct virtqueue *_vq)
 	END_USE(vq);
 	return NULL;
 }
-EXPORT_SYMBOL_GPL(virtqueue_detach_unused_buf);
+
+static unsigned int vring_get_vring_size(struct virtqueue *_vq)
+{
+
+	struct vring_virtqueue *vq = to_vvq(_vq);
+
+	return vq->vring.num;
+}
 
 irqreturn_t vring_interrupt(int irq, void *_vq)
 {
@@ -766,6 +601,24 @@ irqreturn_t vring_interrupt(int irq, void *_vq)
 	return IRQ_HANDLED;
 }
 EXPORT_SYMBOL_GPL(vring_interrupt);
+
+static struct virtqueue_ops vring_ops = {
+	.add_buf		= vring_add_buf,
+	.add_sgs		= vring_add_sgs,
+	.add_outbuf		= vring_add_outbuf,
+	.add_inbuf		= vring_add_inbuf,
+	.kick_prepare		= vring_kick_prepare,
+	.notify			= vring_notify,
+	.kick			= vring_kick,
+	.get_buf		= vring_get_buf,
+	.disable_cb		= vring_disable_cb,
+	.enable_cb_prepare	= vring_enable_cb_prepare,
+	.poll			= vring_poll,
+	.enable_cb		= vring_enable_cb,
+	.enable_cb_delayed	= vring_enable_cb_delayed,
+	.detach_unused_buf	= vring_detach_unused_buf,
+	.get_vring_size		= vring_get_vring_size,
+};
 
 struct virtqueue *vring_new_virtqueue(unsigned int index,
 				      unsigned int num,
@@ -791,6 +644,7 @@ struct virtqueue *vring_new_virtqueue(unsigned int index,
 		return NULL;
 
 	vring_init(&vq->vring, num, pages, vring_align);
+	vq->vq.ops = &vring_ops;
 	vq->vq.callback = callback;
 	vq->vq.vdev = vdev;
 	vq->vq.name = name;
@@ -851,21 +705,5 @@ void vring_transport_features(struct virtio_device *vdev)
 	}
 }
 EXPORT_SYMBOL_GPL(vring_transport_features);
-
-/**
- * virtqueue_get_vring_size - return the size of the virtqueue's vring
- * @vq: the struct virtqueue containing the vring of interest.
- *
- * Returns the size of the vring.  This is mainly used for boasting to
- * userspace.  Unlike other operations, this need not be serialized.
- */
-unsigned int virtqueue_get_vring_size(struct virtqueue *_vq)
-{
-
-	struct vring_virtqueue *vq = to_vvq(_vq);
-
-	return vq->vring.num;
-}
-EXPORT_SYMBOL_GPL(virtqueue_get_vring_size);
 
 MODULE_LICENSE("GPL");
